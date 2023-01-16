@@ -21,7 +21,7 @@ class IBSThread(threading.Thread):
             self.event_obj.clear() #clear it, to suspend the thread after completing the job
 
             (method,args_list)=self.job
-            
+
             if method == "exit":
                 return
 
@@ -39,10 +39,10 @@ class IBSThread(threading.Thread):
         self.updateLastJobTime()
 
         self.job=[method,args_list]
-    
+
     def updateLastJobTime(self):
         self.last_job_time=time.time()
-    
+
 class ThreadPool:
 
     def __str__(self):
@@ -54,19 +54,19 @@ class ThreadPool:
             duration = time.time() - thread.last_job_time
             _str+="Thread %s doing\n\t(%s,%s)\n\tfrom: %s\n"%(thread,thread.job[0],thread.job[1], formatDuration(duration))
         return _str
-    
+
     ####################################
 
     def __init__(self):
         self.__pool={} #thread=>event
         self.__in_use={} # [event, method, args_list, wrapper, time.time()]
-        self.tlock=threading.RLock() 
+        self.tlock=threading.RLock()
         self.__initThreads()
 
     def __initThreads(self):
         for i in range(defs.THREAD_POOL_DEFAULT_SIZE):
             self.__createThread("thread_%s"%i)
-        
+
     def __createThread(self,t_name):
             (new_thread,new_event)=self.__getNewThread(t_name)
             self.__addToPoolWithLocking(new_thread,new_event)
@@ -74,20 +74,20 @@ class ThreadPool:
     def __getNewThread(self,t_name):
         """
             create a new thread with name t_name
-            each thread has an event object to sleep on. 
+            each thread has an event object to sleep on.
             event object is used to wake the thread
         """
-        new_thread=IBSThread(name=t_name) 
+        new_thread=IBSThread(name=t_name)
         new_event=self.__getNewEvent()
         new_thread.setEvent(new_event)
         new_thread.start()
         return (new_thread,new_event)
 
     def __getNewEvent(self):
-        new_event=threading.Event() 
+        new_event=threading.Event()
         new_event.clear()
         return new_event
-            
+
     def __addToPoolWithLocking(self,new_thread,new_event):
         """
             add new_threan and new_event to pool, with locking
@@ -107,7 +107,7 @@ class ThreadPool:
         """
             run a thread, that is called from wrapper "wrapper" to run method "method"
             with arguments "args_list"
-            
+
             wrapper(ThreadPoolWrapper instance): wrapper that want to allocate new thread
             method(function): function to run
             arg_list(list): list of arguments
@@ -123,10 +123,10 @@ class ThreadPool:
             (thread, event) = self.__getThreadFromPool()
             thread.setJob(method,arg_list)
             self.__addToInUse(thread,event,method,arg_list,wrapper)
-            event.set() 
+            event.set()
         finally:
             self.tlock.release()
-        
+
     def __getThreadFromPool(self):
         """
             return a free thread from pool, or allocate if we are out of threads and we didn't hit
@@ -148,7 +148,7 @@ class ThreadPool:
 
     ########################################
 
-    def releaseThread(self,thread): 
+    def releaseThread(self,thread):
         """
             each thread will call this to tell his job has finished
         """
@@ -166,28 +166,28 @@ class ThreadPool:
 
         if wrapper!=None:
             wrapper.threadReleased()
-        
+
     def __delFromInUse(self,thread):
         del(self.__in_use[thread])
 
     ########################################
 
-    def shutdown(self, secs=10): 
+    def shutdown(self, secs=10):
         """
             shutdown the threadpool, by calling exit function on all threads
             it will wait until all threads exits for maximum "secs" seconds
         """
         while (len(self.__pool) or len(self.__in_use)) and secs:
-        
+
             bak=copy.copy(self.__in_use)
             for thread in bak:
                 if not thread.isAlive():
                     self.__delFromInUse(thread)
                     thread.join()
-    
+
             for thread in range(len(self.__pool)):
                 self.__runThread(None,"exit",[])
-        
+
             time.sleep(1)
             secs -=1
 
@@ -196,7 +196,7 @@ class ThreadPool:
     def logThreads(self, log_file=LOG_DEBUG):
         toLog("Threadpool: %s"%str(self), log_file, defs.DEBUG_ALL)
 
-        
+
 def initThreadPool():
     global main_thread_pool
     main_thread_pool=ThreadPool()

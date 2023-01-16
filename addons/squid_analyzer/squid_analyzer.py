@@ -33,9 +33,9 @@ def writeToPidFile(pid):
     fd.close()
 
 if __name__ == '__main__':
-    print "forking ..."       
+    print("forking ...")       
     pid=os.fork()
-    print "Web Analyzer daemon started with pid=%d"%pid
+    print("Web Analyzer daemon started with pid=%d"%pid)
     if pid == 0:
         try:
             init()

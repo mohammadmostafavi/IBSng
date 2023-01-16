@@ -32,6 +32,7 @@ Erick Tryzelaar
 $Revision: 1.106 $
 $Date: 2005/08/12 17:42:39 $
 """
+from functools import reduce
 
 
 try:
@@ -70,7 +71,7 @@ class ExceptionPexpect(Exception):
         In other words, the stack trace inside the Pexpect module is not included.
         """
         tblist = traceback.extract_tb(sys.exc_info()[2])
-        tblist = filter(self.__filter_not_pexpect, tblist)
+        tblist = list(filter(self.__filter_not_pexpect, tblist))
         tblist = traceback.format_list(tblist)
         return ''.join(tblist)
     def __filter_not_pexpect(self, trace_list_item):
@@ -453,7 +454,7 @@ class spawn:
         """This is to support interators over a file-like object.
         """
         return self
-    def next (self):
+    def __next__ (self):
         """This is to support iterators over a file-like object.
         """
         result = self.readline()
@@ -933,7 +934,7 @@ def _which (filename):
         if os.access (filename, os.X_OK):
             return filename
 
-    if not os.environ.has_key('PATH') or os.environ['PATH'] == '':
+    if 'PATH' not in os.environ or os.environ['PATH'] == '':
         p = os.defpath
     else:
         p = os.environ['PATH']

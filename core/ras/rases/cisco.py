@@ -35,8 +35,8 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
         self.internet_onlines={}#port => {"username":,"in_bytes":,"out_byte":,"last_update":,"start_in_bytes":,"start_out_bytes":}
 
         self.voip_onlines={}#h323 => {"username":,"last_update":}
-	#h323 ids that authorization has been done but no voip leg accounting
-	self.voip_auth_h323ids=[] #[h323_id, h323_id] 
+        # #h323 ids that authorization has been done but no voip leg accounting
+        self.voip_auth_h323ids=[] #[h323_id, h323_id]
 
         self.port_no_to_desc_mapping={} #port_no:port_desc
         self.port_desc_to_no_mapping={} #port_desc:port_no
@@ -64,7 +64,7 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
             run "command" on cisco ras
         """
         return self.__doRcmd(self.getRasIP(),command)
-    
+
     def __doRcmd(self,host,command):
         """
             run command "command" on "host" host
@@ -76,7 +76,7 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
         out_str=self.__readAll(out)
         list(map(lambda fd:fd.close(),(_in,out,err)))
         return out_str
-            
+
     def __readAll(self,fd):
         ret=""
         tmp=fd.read()
@@ -90,8 +90,8 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
             kill user based on his port
         """
         try:
-	    if user_msg.hasAttr("port"):
-	        self.__killUserOnPort(user_msg["port"])
+            if user_msg.hasAttr("port"):
+                self.__killUserOnPort(user_msg["port"])
         except:
             logException(LOG_ERROR)
 
@@ -111,7 +111,7 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
             self.toLog("rsh kill: Don't know how to kill port %s"%(self.getRasIP(),port),LOG_ERROR)
             return False
         return True
-        
+
     def __killBySnmp(self,port):
         """
             kill a user on async port,  using snmp
@@ -127,10 +127,10 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
 
         except SnmpException:
             logException(LOG_ERROR)
-            return False        
-            
+            return False
+
         return True
-####################################    
+####################################
     def updateInOutBytes(self):
         if int(self.getAttribute("cisco_update_inout_with_snmp")):
             self.updateInOutBytesBySNMP()
@@ -171,7 +171,7 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
             return True if pkt belongs to an internet session
         """
         return "Framed-Protocol" in pkt and pkt["Framed-Protocol"][0] == "PPP"
-        
+
 ################################### internet helper methods
     def __getPortFromRadiusPacket(self,pkt):
         if "Cisco-NAS-Port" in pkt:
@@ -185,7 +185,7 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
     def __addInternetUniqueIDToRasMsg(self,ras_msg):
         ras_msg["unique_id"]="port"
         ras_msg["port"] = self.__getPortFromRadiusPacket( ras_msg.getRequestPacket() )
-                                                      
+
 
 #################################### some voip helper methods
     def __addVoIPUsernamePasswordToRasMsg(self, ras_msg):
@@ -201,14 +201,14 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
     def __isVoIPPreAuth(self, request_pkt):
         """
         """
-	if "Cisco-AVPair" not in request_pkt or "Calling-Station-Id" not in request_pkt:
-	    return False
-	    
-	for avpair in request_pkt["Cisco-AVPair"]:
-	    if "ani_authorization" in avpair:
-		return True
-	
-	return False
+        if "Cisco-AVPair" not in request_pkt or "Calling-Station-Id" not in request_pkt:
+            return False
+
+        for avpair in request_pkt["Cisco-AVPair"]:
+            if "ani_authorization" in avpair:
+                return True
+
+        return False
 
     def __getH323ConfID(self,ras_msg):
         return self.getH323AttrValue("H323-conf-id",ras_msg.getRequestPacket())
@@ -255,8 +255,8 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
         req = ras_msg.getRequestPacket()
 
         if "Called-Station-Id" in req: #authorization
-            self.__addVoIPUsernamePasswordToRasMsg(ras_msg)     
-            
+            self.__addVoIPUsernamePasswordToRasMsg(ras_msg)
+
             ras_msg.setInAttrs({"Called-Station-Id":"called_number"})
             ras_msg["h323_authorization"] = True
             ras_msg["calc_remaining_time"] = True
@@ -266,9 +266,9 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
         else:
             if self.__isVoIPPreAuth(req): #pre authentication
                 ras_msg["h323_pre_authentication"] = True
-                
+
             else: #authentication
-                self.__addVoIPUsernamePasswordToRasMsg(ras_msg) 
+                self.__addVoIPUsernamePasswordToRasMsg(ras_msg)
                 ras_msg["h323_authentication"] = True
 
             ras_msg.setAction("VOIP_AUTHENTICATE")
@@ -277,29 +277,29 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
 
         ras_msg["multi_login"] = False
         ras_msg["single_session_h323"] = True
-        
+
 
     def _postAuth(self,ras_msg, auth_success):
         GeneralUpdateRas._postAuth(self,ras_msg, auth_success)
-	
-	if ras_msg.hasAttr("h323_pre_authentication") and auth_success:
-	    user_attrs = user_main.getUserPool().getUserByCallerID(ras_msg["caller_id"]).getUserAttrs()
 
-	    username = user_attrs["voip_username"] + user_attrs["voip_password"]
-	    ras_msg.getReplyPacket()["Cisco-AVPair"]="h323-ivr-in=%s"%username
+        if ras_msg.hasAttr("h323_pre_authentication") and auth_success:
+            user_attrs = user_main.getUserPool().getUserByCallerID(ras_msg["caller_id"]).getUserAttrs()
 
-	    if user_attrs.hasAttr("voip_preferred_language"):
-		self.setH323PreferredLanguage(ras_msg.getReplyPacket(), user_attrs["voip_preferred_language"])
+            username = user_attrs["voip_username"] + user_attrs["voip_password"]
+            ras_msg.getReplyPacket()["Cisco-AVPair"]="h323-ivr-in=%s"%username
 
-	elif ras_msg.hasAttr("h323_authorization") and auth_success:
-	    self.__addToAuthH323IDs(ras_msg["h323_conf_id"])
+            if user_attrs.hasAttr("voip_preferred_language"):
+                self.setH323PreferredLanguage(ras_msg.getReplyPacket(), user_attrs["voip_preferred_language"])
+
+        elif ras_msg.hasAttr("h323_authorization") and auth_success:
+            self.__addToAuthH323IDs(ras_msg["h323_conf_id"])
 
 
 ####################################
     def handleRadAcctPacket(self,ras_msg):
         status_type = ras_msg.getRequestAttr("Acct-Status-Type")[0]
         is_internet = self.__isInternetPacket(ras_msg.getRequestPacket())
-        
+
         if status_type=="Start":
             if is_internet:
                 self.__internetAcctStart(ras_msg)
@@ -344,7 +344,7 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
                             "Acct-Session-Id":"session_id",
                             "Acct-Output-Octets":"in_bytes",
                             "Acct-Input-Octets":"out_bytes"})
-        ras_msg.setInAttrsIfExists({"Framed-IP-Address":"remote_ip", 
+        ras_msg.setInAttrsIfExists({"Framed-IP-Address":"remote_ip",
                                     "Acct-Terminate-Cause":"terminate_cause"})
 
         port = self.__getPortFromRadiusPacket(ras_msg.getRequestPacket())
@@ -368,7 +368,7 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
             self.internet_onlines[port]["start_out_bytes"]=self.port_inout_bytes[port]["out_bytes"]
         except KeyError:
             self.toLog("In/Out Byte is not available for port %s"%port)
-    
+
     def __updateInInternetOnlines(self,update_pkt,port):
         """
             update user in internal online list. Update in/out bytes, and last_update time
@@ -389,25 +389,25 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
         (call_type, call_origin) = self.__getVoIPCallType(ras_msg)
         if call_type == "VoIP" and call_origin == "originate":
             self.__addVoIPUniqueIdToRasMsg(ras_msg)
-            self.__addVoIPUsernamePasswordToRasMsg(ras_msg)     
+            self.__addVoIPUsernamePasswordToRasMsg(ras_msg)
 
             ras_msg["start_accounting"]=True
             ras_msg["update_attrs"]=["start_accounting"]
 
             self.__addInVoIPOnlines(ras_msg)
-	    #remove h323_conf_id from authorized but no accounting started list
-	    self.__removeFromAuthH323IDs(ras_msg["h323_conf_id"])
+            #remove h323_conf_id from authorized but no accounting started list
+            self.__removeFromAuthH323IDs(ras_msg["h323_conf_id"])
 
             ras_msg.setAction("VOIP_UPDATE")
-            
+
     def __voipAcctStop(self, ras_msg):
         (call_type, call_origin) = self.__getVoIPCallType(ras_msg)
         if call_type == "VoIP" and call_origin == "originate":
             self.__addVoIPUniqueIdToRasMsg(ras_msg)
-            self.__addVoIPUsernamePasswordToRasMsg(ras_msg)     
+            self.__addVoIPUsernamePasswordToRasMsg(ras_msg)
 
             pkt = ras_msg.getRequestPacket()
-            
+
             self.setH323TimeInAttrs(ras_msg,{"H323-disconnect-time":"disconnect_time"})
             self.setH323TimeInAttrs(ras_msg,{"H323-connect-time":"connect_time"})
             ras_msg["disconnect_cause"]=self.getH323AttrValue("H323-disconnect-cause",pkt)
@@ -417,28 +417,28 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
             self.__deleteFromVoIPOnlines(ras_msg)
 
             ras_msg.setAction("VOIP_STOP")
-	    
-	elif call_type == "Telephony" and call_origin == "answer":
-	    if "H323-conf-id" in ras_msg.getRequestPacket():
-    	  	self.__addVoIPUniqueIdToRasMsg(ras_msg)
-                self.__addVoIPUsernamePasswordToRasMsg(ras_msg)     
 
-		if self.__isInAuthH323IDs(ras_msg["h323_conf_id"]):
+        elif call_type == "Telephony" and call_origin == "answer":
+            if "H323-conf-id" in ras_msg.getRequestPacket():
+                self.__addVoIPUniqueIdToRasMsg(ras_msg)
+                self.__addVoIPUsernamePasswordToRasMsg(ras_msg)
 
-		    now=int(time.time())
-		    ras_msg["connect_time"]=now
-		    ras_msg["disconnect_time"]=now
+            if self.__isInAuthH323IDs(ras_msg["h323_conf_id"]):
 
-		    ras_msg.setAction("VOIP_STOP")
-        
-        
+                now=int(time.time())
+                ras_msg["connect_time"]=now
+                ras_msg["disconnect_time"]=now
+
+                ras_msg.setAction("VOIP_STOP")
+
+
     def __voipAcctUpdate(self, ras_msg):
         (call_type, call_origin) = self.__getVoIPCallType(ras_msg)
         if call_type == "VoIP" and call_origin == "originate":
             self.__addVoIPUniqueIdToRasMsg(ras_msg)
-            self.__addVoIPUsernamePasswordToRasMsg(ras_msg)     
+            self.__addVoIPUsernamePasswordToRasMsg(ras_msg)
             self.__updateInVoIPOnlines(ras_msg)
-        
+
 ###################################
     def __addInVoIPOnlines(self, ras_msg):
         self.voip_onlines[ras_msg["h323_conf_id"]]={"username":ras_msg["voip_username"],"last_update":time.time()}
@@ -460,25 +460,25 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
 #######################VoIP Accounting Leg Start.
     def __addToAuthH323IDs(self, h323_conf_id):
         self.voip_auth_h323ids.append(h323_conf_id)
-	
+
     def __removeFromAuthH323IDs(self, h323_conf_id):
-	"""
-	    Warning: Silently discard exception if value isn't in dic
-	"""
-	try:
-	    self.voip_auth_h323ids.remove(h323_conf_id)
-	except ValueError:
-	    pass
-    
+        """
+            Warning: Silently discard exception if value isn't in dic
+        """
+        try:
+            self.voip_auth_h323ids.remove(h323_conf_id)
+        except ValueError:
+            pass
+
     def __isInAuthH323IDs(self, h323_conf_id):
-	return h323_conf_id in self.voip_auth_h323ids
+	    return h323_conf_id in self.voip_auth_h323ids
 
 ########################################
     def _reload(self):
         GeneralUpdateRas._reload(self)
         self.snmp_client=self.__createSnmpClient()
         self.port_mapping_last_update=0
-        
+
 ########################################
     def updateInOutBytesBySNMP(self):
         try:
@@ -516,12 +516,12 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
     def __updatePortMapping(self):
         if self.port_mapping_last_update>time.time()-60*60*5:#5 hours
             return
-            
+
         snmp_mapping=self.snmp_client.walk(".1.3.6.1.2.1.2.2.1.2")
         if snmp_mapping:
             (self.port_no_to_desc_mapping,self.port_desc_to_no_mapping)=self.__createPortMappingDic(snmp_mapping)
             self.port_mapping_last_update=time.time()
-    
+
     def __createPortMappingDic(self,snmp_dic):
         no_mapping={} #number to desc mapping
         desc_mapping={} #desc to number mapping
@@ -539,4 +539,4 @@ class CiscoRas(GeneralUpdateRas, VoIPRas):
 
     def setSingleH323CreditAmount(self,reply_pkt,credit_amount):
         return VoIPRas.setSingleH323CreditAmount(self,reply_pkt,credit_amount, int(self.getAttribute("cisco_credit_float_precision")))
-    
+

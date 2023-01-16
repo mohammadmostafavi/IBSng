@@ -48,7 +48,7 @@ class PluginLoader:
         """
             return list of all .py files in directory
         """
-        return filter(lambda name: name.endswith(".py"),self.__getFilesList(directory))
+        return [name for name in self.__getFilesList(directory) if name.endswith(".py")]
 
     def __getFilesList(self,directory):
         """
