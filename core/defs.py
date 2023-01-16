@@ -9,6 +9,9 @@ DEBUG_NOTHING=0
 
 DEBUG_LEVEL=3 #debug level
 
+
+RADIUS_SERVER_ENABLED=1
+
 LOG_RADIUS_REQUESTS=True #LOG radius requests in /var/log/IBSng/ibs_radius.log
 LOG_RADIUS_RESPONSES=True #LOG radius responses in /var/log/IBSng/ibs_radius.log
 

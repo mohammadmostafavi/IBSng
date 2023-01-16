@@ -24,39 +24,39 @@ class OnlineUsers:
 
     def __removeFromRasOnlines(self,global_unique_id):
         del(self.ras_onlines[global_unique_id])
-    
+
     def __removeFromUserOnlines(self,user_obj):
         del(self.user_onlines[user_obj.getUserID()])
-        
+
     def __checkDuplicateOnline(self,ras_msg):
         """
             check if there's any other user online, with this global unique id
         """
         global_unique_id = (ras_msg.getRasID(), ras_msg.getUniqueIDValue())
-        
+
         if global_unique_id in self.ras_onlines:
             current_online_user_obj = self.getUserObjByUniqueID(*global_unique_id)
             current_online_user_id = current_online_user_obj.getUserID()
-            
-            getLogConsole().log(current_online_user_obj.getUserRepr(), 
+
+            getLogConsole().log(current_online_user_obj.getUserRepr(),
                                 "Duplicate Login",
                                 [("New User", ras_msg.getUserRepr()),
                                  ("Ras", ras_main.getLoader().getRasByID(global_unique_id[0]).getRasIP()),
                                  ("ID", global_unique_id[1])])
 
             toLog("User %s logged on %s, while user %s was on it, force logouting %s"%(
-                                                                    ras_msg.getUserRepr(), 
+                                                                    ras_msg.getUserRepr(),
                                                                     global_unique_id,
                                                                     current_online_user_id,
                                                                     current_online_user_id),LOG_ERROR)
 
             self.clearUser(current_online_user_id, global_unique_id[0], global_unique_id[1], \
                                    "Another user logged on this global unique id", False)
-        
+
 ############################################
     def getOnlineUsers(self):
         return copy.copy(self.user_onlines)
-    
+
     def getOnlineUsersByRas(self):
         return copy.copy(self.ras_onlines)
 
@@ -96,9 +96,9 @@ class OnlineUsers:
         for online_ras_id,unique_id in self.getOnlineUsersByRas():
             if ras_id == online_ras_id:
                 return True
-        
+
         return False
-        
+
 ############################################
     def reloadUser(self,user_id):
         self.loading_user.loadingStart(user_id)
@@ -109,8 +109,8 @@ class OnlineUsers:
             else:
                 user_obj._reload()
                 if user_obj.accountingStarted(None):
-                    self.recalcNextUserEvent(user_obj.getUserID(),True) 
-        finally:                                                    
+                    self.recalcNextUserEvent(user_obj.getUserID(),True)
+        finally:
             self.loading_user.loadingEnd(user_id)
 
 ##############################################
@@ -127,7 +127,7 @@ class OnlineUsers:
         finally:
             self.loading_user.loadingEnd(user_obj.getUserID())
 
-    
+
 ############################################
     def recalcNextUserEvent(self,user_id,remove_prev_event=False):
         """
@@ -164,7 +164,7 @@ class OnlineUsers:
 
         instances.sort()
         instances.reverse() #kill downward, prevent from instance shift
-        
+
         for instance in instances:
             user_obj.setKillReason(instance,kill_dic[instance])
             user_obj.getTypeObj().killInstance(instance)
@@ -173,7 +173,7 @@ class OnlineUsers:
         """
             check ibs current list of online users, by asking ras to say if user is online or not
         """
-        for user_id in list(self.user_onlines.keys()):
+        for user_id in self.user_onlines.keys():
             self.loading_user.loadingStart(user_id)
             try:
                 try:
@@ -203,37 +203,37 @@ class OnlineUsers:
 
                     toLog("Maximum Check Online Fails Reached for user %s"%user_obj.getUserID(), LOG_DEBUG)
 
-                    getLogConsole().log(user_obj.getUserRepr(), 
+                    getLogConsole().log(user_obj.getUserRepr(),
                                         "Check Online Fail",
                                         [("Ras", ras_main.getLoader().getRasByID(instance_info["ras_id"]).getRasIP()),
                                         ("ID", "(%s,%s)"%(instance_info["unique_id"], instance_info["unique_id_val"]))
                                         ])
 
                     self.__forceLogoutUser(user_obj,instance,errorText("USER_LOGIN","MAX_CHECK_ONLINE_FAILS_REACHED",False))
-        
+
             instance -= 1
 
 
     def __negCreditCheck(self, user_obj):
         """
             check and kill users with negative credit
-            
+
             WARNING: Will be Removed, killedCheck has better meaning and works with all plugins
         """
         credit = user_obj.calcCurrentCredit()
         if  credit < 0 : #neg credit checker
             toLog("Found User with negative credit %s:%s"%(user_obj.getUserID(), credit), LOG_ERROR)
-            
+
             for instance in range(1,user_obj.instances+1):
                 instance_info = user_obj.getInstanceInfo(instance)
 
                 if "neg_credit_killed" not in instance_info:
                     user_obj.setKillReason(instance,errorText("USER_LOGIN","KILLED_BY_NEG_CREDIT_CHECKER",False))
-                    
-                instance_info["neg_credit_killed"] = True                   
+
+                instance_info["neg_credit_killed"] = True
                 user_obj.getTypeObj().killInstance(instance)
-    
-    
+
+
     def __killedCheck(self, user_obj):
         """
             check and re-kill users that has been killed previously
@@ -246,8 +246,8 @@ class OnlineUsers:
                     instance_info["seen_by_killed_checker"] += 1
                     user_obj.getTypeObj().killInstance(instance)
                 else:
-                    instance_info["seen_by_killed_checker"] = 0 
-        
+                    instance_info["seen_by_killed_checker"] = 0
+
 ################################################
     def __forceLogoutUser(self,user_obj,instance,kill_reason,no_commit=False):
         """
@@ -260,17 +260,17 @@ class OnlineUsers:
             toLog("Don't know how to force logout user %s instance %s"%(self.user_obj.getUserID(),instance),LOG_ERROR|LOG_DEBUG)
             return
         user_obj.setKillReason(instance,kill_reason)
-        
+
         if no_commit:
             ras_msg["no_commit"]=True
-            
+
         return method(*[ras_msg])
 
     def __createForceLogoutRasMsg(self,user_obj,instance):
         instance_info=user_obj.getInstanceInfo(instance)
         ras_msg=RasMsg(None,None,ras_main.getLoader().getRasByID(instance_info["ras_id"]))
         return ras_msg
-    
+
     def __populateRasMsg(self,user_obj,instance,ras_msg):
         """
             should set necessary ras_msg attribute and return the logout method
@@ -280,7 +280,7 @@ class OnlineUsers:
         ras_msg[instance_info["unique_id"]]=instance_info["unique_id_val"]
         ras_msg["user_id"]=user_obj.getUserID()
         if user_obj.isNormalUser():
-            
+
             if user_obj.getTypeObj().isPersistentLanClient(instance):
                 ras_msg.setAction("PERSISTENT_LAN_STOP")
                 return self.persistentLanStop
@@ -309,7 +309,7 @@ class OnlineUsers:
             self.loading_user.loadingEnd(user_id)
 
         if user_obj != None:
-            getLogConsole().log(user_obj.getUserRepr(), 
+            getLogConsole().log(user_obj.getUserRepr(),
                                 "Clear User",
                                 [("Ras", ras_main.getLoader().getRasByID(ras_id).getRasIP()),
                                 ("ID", unique_id),
@@ -330,7 +330,7 @@ class OnlineUsers:
 
 
         if user_obj != None:
-            getLogConsole().log(user_obj.getUserRepr(), 
+            getLogConsole().log(user_obj.getUserRepr(),
                                 "Kill User",
                                 [("Ras", ras_main.getLoader().getRasByID(ras_id).getRasIP()),
                                 ("ID", unique_id),
@@ -349,7 +349,7 @@ class OnlineUsers:
                     user_obj=self.user_onlines[user_id]
                 except KeyError: #he's no longer online
                     continue
-                    
+
                 for instance in range(user_obj.instances, 0, -1): #prevent from instance shifts
                     try:
                         if kill_or_clear:
@@ -369,7 +369,7 @@ class OnlineUsers:
 
         instance=user_obj.getInstanceFromUniqueID(ras_id,unique_id)
         return (user_obj, instance)
-    
+
 #############################################
     def internetAuthenticate(self,ras_msg):
         self.__checkDuplicateOnline(ras_msg)
@@ -385,7 +385,7 @@ class OnlineUsers:
                     user_obj=self.__loadUserObj(loaded_user,"Normal")
                 elif not user_obj.isNormalUser():
                     raise GeneralException(errorText("USER_LOGIN","CANT_USE_MORE_THAN_ONE_SERVICE"))
-                    
+
                 user_obj.login(ras_msg)
                 self.__authSuccessfull(user_obj,ras_msg)
             except:
@@ -394,10 +394,10 @@ class OnlineUsers:
                 raise
         finally:
             self.loading_user.loadingEnd(loaded_user.getUserID())
-            
+
     def __authSuccessfull(self,user_obj,ras_msg):
         """
-            add user to online dic      
+            add user to online dic
         """
         self.__addToOnlines(user_obj)
         if ras_msg.hasAttr("start_accounting"):
@@ -415,7 +415,7 @@ class OnlineUsers:
             if user_obj==None:
                 toLog("Got internet stop for user %s, but he's not online"%ras_msg["username"],LOG_DEBUG)
                 return
-                
+
             instance=user_obj.getInstanceFromRasMsg(ras_msg)
             if instance==None:
                 toLog(errorText("USER","CANT_FIND_INSTANCE")%(user_obj.getUserID(),ras_msg.getRasID(),ras_msg.getUniqueIDValue()),LOG_DEBUG)
@@ -435,15 +435,15 @@ class OnlineUsers:
             accounting_started(bool): is start accounting received for this instance of this user?
         """
         self.__removeFromRasOnlines(global_unique_id)
-        
+
         if user_obj.instances==0:
             self.__removeFromUserOnlines(user_obj)
             if accounting_started:
                 self.__removePrevUserEvent(user_obj.getUserID())
 
             user_obj.getLoadedUser().setOnlineFlag(False)
-            user_main.getUserPool().userChanged(user_obj.getUserID()) 
-                
+            user_main.getUserPool().userChanged(user_obj.getUserID())
+
         else:
             if accounting_started:
                 self.recalcNextUserEvent(user_obj.getUserID(),True)
@@ -451,7 +451,7 @@ class OnlineUsers:
 #########################################################
     def persistentLanAuthenticate(self,ras_msg):
         self.__checkDuplicateOnline(ras_msg)
-                
+
         loaded_user=user_main.getUserPool().getUserByID(ras_msg["user_id"],True)
         self.loading_user.loadingStart(loaded_user.getUserID())
         try:
@@ -498,7 +498,7 @@ class OnlineUsers:
             loaded_user=user_main.getUserPool().getUserByCallerID(ras_msg["caller_id"])
         else:
             loaded_user=user_main.getUserPool().getUserByVoIPUsername(ras_msg["voip_username"])
-            
+
         self.loading_user.loadingStart(loaded_user.getUserID())
         try:
             user_obj=self.getUserObj(loaded_user.getUserID())
@@ -507,8 +507,8 @@ class OnlineUsers:
 
         finally:
             self.loading_user.loadingEnd(loaded_user.getUserID())
-            
-        user_obj=self.__loadUserObj(loaded_user,"VoIP") #always test login on new user_obj, 
+
+        user_obj=self.__loadUserObj(loaded_user,"VoIP") #always test login on new user_obj,
                                                         #and trash it after test
         ras_msg["no_commit"] = True
         user_obj.login(ras_msg) #test login
@@ -530,7 +530,7 @@ class OnlineUsers:
                     user_obj=self.__loadUserObj(loaded_user,"VoIP")
                 elif not user_obj.isVoIPUser():
                     raise GeneralException(errorText("USER_LOGIN","CANT_USE_MORE_THAN_ONE_SERVICE"))
-                    
+
                 user_obj.login(ras_msg)
                 self.__authSuccessfull(user_obj,ras_msg)
             except:
@@ -565,9 +565,9 @@ class OnlineUsers:
             self.__logoutRecalcEvent(user_obj, global_unique_id, accounting_started)
         finally:
             self.loading_user.loadingEnd(pre_user_obj.getUserID())
-        
+
         return used_credit
-        
+
 class OnlineCheckPeriodicEvent(periodic_events.PeriodicEvent):
     def __init__(self):
         periodic_events.PeriodicEvent.__init__(self,"Online Check",defs.CHECK_ONLINE_INTERVAL,[],0)
@@ -575,4 +575,4 @@ class OnlineCheckPeriodicEvent(periodic_events.PeriodicEvent):
     def run(self):
         user_main.getOnline().checkOnlines()
 
-        
+

@@ -136,7 +136,7 @@ class Language:
             say number until one of escape digits pressed. return the digit pressed
             return empty string if no digits was pressed until end of prompt
         """
-        number=long(number)
+        number=int(number)
         return self.sayFiles(self.sayNumberCreateList(number))
 
     def sayNumberCreateList(self, number):

@@ -10,7 +10,7 @@ def dbTimeFromEpoch(epoch_time):
 #############################33
 def cur_day_of_week():
     return time.localtime()[6]
-    
+
 ###############################
 def secondsFromMorning(_time=0):
     """
@@ -30,11 +30,11 @@ class Time:
     """
     def __init__(self,time_str):
         """
-            time_str(string): string representing time. it may be not fully described time 
+            time_str(string): string representing time. it may be not fully described time
                               ex. 12, 12:3, 12:30:12 are valid inputs
-        
+
             This method may raise GeneralException on bad time_strs
-            Genrated Exceptions doesn't containg key, as described in errors.errorText  
+            Genrated Exceptions doesn't containg key, as described in errors.errorText
         """
         self.time_str=time_str
         (self.formatted_time,self.hour,self.minute,self.second)=self.__formatTime(time_str)
@@ -89,11 +89,11 @@ def getEpochFromRadiusTime(rad_time):
         raise IBSError(errorText("GENERAL","INVALID_RADIUS_TIME")%rad_time)
 
     (_time,date) = match_obj.groups()
-    
+
     #daylight saving is auto detemined
-    time_tuple = time.strptime("%s %s" % (_time,date), "%H:%M:%S %Z %a %b %d %Y" ) 
-    
-    
+    time_tuple = time.strptime("%s %s" % (_time,date), "%H:%M:%S %Z %a %b %d %Y" )
+
+
     return time.mktime( time_tuple )
 ##############################################
 def getGregorianNextMonthEpoch():
@@ -115,7 +115,7 @@ def getJalaliNextMonthEpoch():
     if jmonth > 12:
         jyear += 1
         jmonth = 1
-    
+
     jtog = JalaliToGregorian(jyear, jmonth, 1)
     year, month, day = jtog.getGregorianList()
     return time.mktime((year,month,day,0,0,0,0,0,-1))
@@ -148,23 +148,23 @@ def dbTimeToList(dbTime):
             dot=len(dbTime)
         else:
             dot=plus
-    
+
     try:
         ret=list(time.strptime(dbTime[:dot],"%Y-%m-%d %H:%M:%S"))
         ret[8]=-1
         return ret
     except:
         raise GeneralException("Invalid dbTime: " + str(dbTime))
-        
 
-def getEpochTimeFromHourOfDay(hour,_min=0,sec=0,dayToAdd=0):
-    tm=list(time.localtime())
-    tm[3]=hour
-    tm[4]=_min
-    tm[5]=sec
-    tm[2]+=dayToAdd
-    
-    return time.mktime(tm)
+
+def getEpochTimeFromHourOfDay(hour, _min=0, sec=0, dayToAdd=0):
+    tm = list(time.localtime())
+    tm[3] = hour
+    tm[4] = _min
+    tm[5] = sec
+    tm[2] += dayToAdd
+
+    return time.mktime(tuple(tm))
 
 def epochTimeFromRadiusTime(rad_time):
     sp=rad_time.split()
@@ -193,4 +193,3 @@ def getDurationInSec(duration,unit):
     else:
         raise GeneralException("Invalid duration unit %s"%unit)
 
-    
