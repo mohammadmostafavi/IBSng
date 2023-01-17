@@ -1,9 +1,10 @@
 <?php
 require_once("init.php");
+//require INTERFACE_ROOT.'vendor/autoload.php';
 require_once(SMARTY_DIR."Smarty.class.php");
 
 
-class IBSSmarty extends Smarty 
+class IBSSmarty extends Smarty
 {
    function IBSSmarty()
    {
@@ -12,7 +13,7 @@ class IBSSmarty extends Smarty
         $this->template_dir = SMARTY_ROOT.'templates/';
         $this->compile_dir = SMARTY_ROOT.'templates_c/';
         $this->config_dir = SMARTY_ROOT.'configs/';
-        $this->cache_dir = SMARTY_ROOT.'cache/'; 
+        $this->cache_dir = SMARTY_ROOT.'cache/';
 
         $this->caching = false;
 
@@ -26,7 +27,7 @@ class IBSSmarty extends Smarty
 
     function setAuthVars()
     {/* set authenticated user variables in smarty variable
-        
+
      */
         $auth=getAuth();
         $this->assign("auth_type",$auth->getAuthType());
@@ -45,7 +46,7 @@ class IBSSmarty extends Smarty
      * check if varibale assigned in template
      *
      * @param string $tpl_var the template variable name
-     * 
+     *
      */
     function is_assigned($tpl_var)
     {
@@ -80,23 +81,23 @@ class IBSSmarty extends Smarty
                     $this->assign($var_name,TRUE);
                     unset($vars_keys[$var_name]); //changing loop array in loop!!!
                 }
-                
+
         foreach ($vars_keys as $var_name=>$keys)
                 $this->assign($var_name,FALSE);
 
     }
 
     function set_page_error($errs)
-    { /* set page err_msgs array in smarty or append previous array values 
-         It means you can call this multiple times within a single page, and all of errors will be shown.    
+    { /* set page err_msgs array in smarty or append previous array values
+         It means you can call this multiple times within a single page, and all of errors will be shown.
     */
         if(!is_array($errs))
             $errs=array($errs);
-        
+
         if ($this->is_assigned("err_msgs"))
             foreach($errs as $err)
                 $this->append("err_msgs",$err);
-        else    
+        else
             $this->assign("err_msgs",$errs);
     }
 

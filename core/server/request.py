@@ -19,14 +19,14 @@ class Request:
         """
             params: List of a dic [{param_name:param_value,...}]
         """
-        
+
         self.handler_obj=handler_obj
         self.method=method
         self.authenticated=0
         self.client_address=client_address
 
         try:
-            params=self.__processParams(params)
+            self.__processParams(params)
         except:
             logException(LOG_ERROR,"proccessParams")
             raise HandlerException("Invalid parameters")
@@ -54,7 +54,7 @@ class Request:
 
         else:
             raise LoginException(errorText("GENERAL","INVALID_AUTH_TYPE"))
-            
+
         self.authenticated=1
 
 
@@ -71,8 +71,8 @@ class Request:
         response_obj=Response()
         response_obj.setError(error_text)
         return response_obj
-        
-    
+
+
     def checkArgs(self,*args):
         """
             check if *args variables are passed via request.
@@ -87,7 +87,7 @@ class Request:
 
     def raiseAccessDenied(self):
         raise HandlerException(errorText("GENERAL","ACCESS_DENIED"))
-    
+
     def needAuthType(self,*args):
         """
             handler checks user that call the handler must have auth_type in "args" by calling
@@ -95,8 +95,8 @@ class Request:
             ex. needAuthType("admin")
         """
         if self.auth_type not in args:
-            self.raiseAccessDenied()    
-    
+            self.raiseAccessDenied()
+
     def hasAuthType(self,auth_type):
         """
             check if this request has auth type of "auth_type"
@@ -125,7 +125,7 @@ class Request:
 
     def getAuthNameObj(self):
         """
-            return object of auth_name, it's available for auth_types: admin 
+            return object of auth_name, it's available for auth_types: admin
             and not available for: anonymous
             if it's not available , an exception is raised
         """
@@ -137,10 +137,10 @@ class Request:
         """
         self.params=params[0]
         self.__processAuthParams()
-        
-        
+
+
     def __processAuthParams(self):
-        """    
+        """
             check for auth_type auth_name and auth_pass in params
         """
         self.auth_name=self.params["auth_name"]
@@ -155,7 +155,7 @@ class Request:
         admin_obj=admin_main.getLoader().getAdminByName(self.auth_name)
         admin_obj.checkServerAuth(self.auth_pass,self.getRemoteAddr())
         self.auth_name_obj=admin_obj
-    
+
     def __checkNormalUserAuth(self):
         self.auth_name_obj=user_main.getServerAuth().checkAuth(self.auth_name,self.auth_pass,self.auth_type)
 
@@ -164,7 +164,7 @@ class Request:
 
     def __checkMailAuth(self):
         pass
-    
+
     def __checkAnonymousAuth(self):
         pass
 
@@ -174,17 +174,18 @@ class Request:
             if no date_type passed, gregorian dates are used
             values can be "gregorian" and "jalali"
         """
-        if "date_type" in self and self["date_type"] in ("gregorian","jalali","relative"):
+
+        if "date_type" in self.params and self.params["date_type"] in ("gregorian","jalali","relative"):
             return self["date_type"]
         else:
             return "gregorian"
 
     def fixList(self,key):
         """
-            some xmlrpc implementions return lists as dictionaries. 
+            some xmlrpc implementions return lists as dictionaries.
             This method return value of key if it is a list, or convert it to list, if it's dictionary
         """
         if type(self[key])==dict:
             return [self[key][repr(x)] for x in range(len(self[key]))] #let's keep the order
-            
+
         return key

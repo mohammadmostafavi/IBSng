@@ -6,7 +6,7 @@ from core.lib.general import *
 def init():
     global handlers_manager
     handlers_manager=HandlersManager()
-    
+
 def getManager():
     return handlers_manager
 
@@ -32,7 +32,7 @@ class HandlersManager:
         name=handler_obj.getHandlerName()
         if self.handlerRegistered(name):
             raise HandlerException("Handler --%s-- already registered"%name)
-        
+
         self.__handler_instances[name]=handler_obj
 
     def dispatch(self,method_name,params,client_address):
@@ -57,7 +57,7 @@ class HandlersManager:
         except:
             logException(LOG_ERROR,"dispatch")
             self.__returnError(errorText("GENERAL","INTERNAL_ERROR"))
-        
+
 
     def __checkMethod(self,handler_obj,method):
         """
@@ -90,10 +90,10 @@ class HandlersManager:
 
     def __createRequestObj(self,handler_obj,method,params,client_address):
         """
-            create and return request object     
+            create and return request object
         """
         return self.request.Request(handler_obj,method,params,client_address)
-        
+
     def __checkAuthentication(self,request_obj):
         """
             check request authentication
@@ -114,7 +114,7 @@ class HandlersManager:
         raise XMLRPCFault(error_text)
 
     def __returnResponse(self,handler_ret_val):
-    
+
         """
             return response from "handler_ret_val" to server
         """
@@ -124,7 +124,7 @@ class HandlersManager:
             return ""
         else:
             return handler_ret_val
-    
+
     def __returnResponseObj(self,response_obj):
         """
             return response of a handler, that returned a response_obj

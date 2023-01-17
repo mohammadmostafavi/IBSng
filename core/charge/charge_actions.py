@@ -1,3 +1,5 @@
+import time
+from datetime import datetime
 from core.admin import admin_main
 from core.charge import charge_main,charge_types,charge_rule
 from core.lib.general import *
@@ -25,8 +27,8 @@ class ChargeActions:
         charge_id=self.__getNewChargeID()
         self.__insertNewCharge(charge_id,name,comment,charge_type,admin_id,visible_to_all)
         charge_main.getLoader().loadCharge(charge_id)
-        
-    
+
+
     def __addChargeCheckInput(self,name,comment,charge_type,admin_id,visible_to_all):
         """
             check addCharge inputs validity
@@ -37,7 +39,7 @@ class ChargeActions:
         self.__checkChargeType(charge_type)
         if charge_main.getLoader().chargeNameExists(name):
             raise GeneralException(errorText("CHARGES","CHARGE_NAME_EXISTS") % name)
-        
+
         if not isValidName(name):
             raise GeneralException(errorText("CHARGES","INVALID_CHARGE_NAME") % name)
 
@@ -50,7 +52,7 @@ class ChargeActions:
             return a new id for new charge
         """
         return db_main.getHandle().seqNextVal("charges_id_seq")
-        
+
     def __insertNewCharge(self,charge_id,name,comment,charge_type,admin_id,visible_to_all):
         """
             insert the new charge to db
@@ -103,7 +105,7 @@ class ChargeActions:
         """
             add a charge rule to charge with id "charge_id" and reload the charge
             it will add charge_rule and it's ports to db too
-            
+
             start_time(str): time representation eg "0:0:0"
             end_time(str): time representation eg "0:0:0"
             day_of_weeks(list of str): list of full day names eg ["Monday", "Wednesday"]
@@ -142,16 +144,16 @@ class ChargeActions:
             cpk=float(cpk)
         except:
             raise GeneralException(errorText("CHARGES","CPK_NOT_NUMERIC"))
-            
+
         if assumed_kps<=0:
             raise GeneralException(errorText("CHARGES","ASSUMED_KPS_NOT_POSITIVE"))
 
         if bandwidth_limit_kbytes<0:
             raise GeneralException(errorText("CHARGES","BANDWIDTH_LIMIT_NOT_POSITIVE"))
-            
+
         if cpm<0:
             raise GeneralException(errorText("CHARGES","CPM_NOT_POSITIVE"))
-            
+
         if cpk<0:
             raise GeneralException(errorText("CHARGES","CPK_NOT_POSITIVE"))
 
@@ -161,7 +163,7 @@ class ChargeActions:
 
         elif (len(tx_leaf_name)==0 and len(rx_leaf_name)!=0) or (len(tx_leaf_name)!=0 and len(rx_leaf_name)==0):
             raise GeneralException(errorText("CHARGES","BW_LEAF_NAMES_SHOULD_BOTH_SET"))
-            
+
 
 
     def __addInternetChargeRuleToDB(self,rule_obj):
@@ -187,13 +189,13 @@ class ChargeActions:
         return self.__addInternetChargeRuleQuery(rule_obj) + \
                self.__addChargeRulePortsQuery(rule_obj.getPorts(),rule_obj.getRuleID()) + \
                self.__addChargeRuleDowsQuery(rule_obj.getDows(),rule_obj.getRuleID())
-        
+
     def __addInternetChargeRuleQuery(self,rule_obj):
         """
             return query for inserting rule_obj properties into charge_rules table
         """
         ras_id=self.__convertRasID(rule_obj.getRasID())
-        
+
         return ibs_db.createInsertQuery("internet_charge_rules",{"charge_id":rule_obj.charge_obj.getChargeID(),
                                                         "charge_rule_id":rule_obj.getRuleID(),
                                                         "start_time":dbText(rule_obj.start_time),
@@ -239,7 +241,7 @@ class ChargeActions:
         """
         if charge_rule_id not in charge_main.getLoader().getChargeByName(charge_name).getRules():
             raise GeneralException(errorText("CHARGES","CHARGE_RULE_NOT_IN_CHARGE")%(charge_rule_id,charge_name))
-    
+
 
     def __createDayOfWeekContainer(self,day_of_weeks):
         """
@@ -260,8 +262,10 @@ class ChargeActions:
         rule_info["charge_rule_id"]=charge_rule_id
         rule_info["cpm"]=cpm
         rule_info["cpk"]=cpk
-        rule_info["start_time"]=start_time.getFormattedTime()
-        rule_info["end_time"]=end_time.getFormattedTime()
+        # rule_info["start_time"]=start_time.getFormattedTime()
+        rule_info["start_time"]=datetime.strftime(start_time,"%H:%M:%S")
+        # rule_info["end_time"]=end_time.getFormattedTime()
+        rule_info["end_time"]=datetime.strftime(end_time,"%H:%M:%S")
         rule_info["bandwidth_limit_kbytes"]=bandwidth_limit_kbytes
         rule_info["assumed_kps"]=assumed_kps
         rule_info["ras_id"]=ras_id
@@ -285,26 +289,30 @@ class ChargeActions:
             day_of_weeks(list): list of day of week strings
         """
         try:
-            start_time=Time(start_time)
+            start_time=datetime.strptime(start_time,"%H:%M:%S")
         except GeneralException as e:
             raise GeneralException(errorText("CHARGES","INVALID_RULE_START_TIME")%e)
 
         try:
-            end_time=Time(end_time)
+            end_time=datetime.strptime(end_time,"%H:%M:%S")
         except GeneralException as e:
             raise GeneralException(errorText("CHARGES","INVALID_RULE_END_TIME")%e)
 
         if start_time >= end_time:
             raise GeneralException(errorText("CHARGES","RULE_END_LESS_THAN_START"))
-    
+
         try:
-            dows=list(map(DayOfWeekString,day_of_weeks))
+            # dows=list(map(DayOfWeekString,day_of_weeks))
+            dows= []
+            for dow in day_of_weeks:
+                dows.append(DayOfWeekString(dow))
+
         except GeneralException as e:
             raise GeneralException(errorText("CHARGES","INVALID_DAY_OF_WEEK")%e)
 
         return (start_time,end_time,dows)
 
-        
+
     def __chargeRuleCheckInput(self,charge_name,charge_type,ras_id,ports):
         """
             check ChargeRule inputs and raise an exception on bad input
@@ -317,7 +325,7 @@ class ChargeActions:
             if len(ports)==0:
                 raise GeneralException(errorText("CHARGES","NO_PORT_SELECTED"))
 
-    
+
     def __convertBwLeaves(self,tx_leaf_name,rx_leaf_name):
         """
             convert bw leaf names to their id, or to None if they are not specified
@@ -331,7 +339,7 @@ class ChargeActions:
     def __convertRasID(self,ras_id):
         """
             convert ras_id to be ready for db insertion, ras_id wildcard is shown by null
-        """     
+        """
         if ras_id == charge_rule.ChargeRule.ALL:
             ras_id="NULL"
         return ras_id
@@ -346,7 +354,7 @@ class ChargeActions:
         start_time,end_time,day_of_weeks=self.__chargeRuleTimesCheck(start_time,end_time,day_of_weeks)
         charge_rule_id=self.__updateInternetChargeRuleCheckInput(charge_name,charge_rule_id,start_time,end_time,day_of_weeks,cpm,cpk,\
                                    assumed_kps,bandwidth_limit_kbytes,tx_leaf_name,rx_leaf_name,ras_id,ports)
-        
+
         charge_obj=charge_main.getLoader().getChargeByName(charge_name)
         day_of_weeks_container=self.__createDayOfWeekContainer(day_of_weeks)
         tx_leaf_id,rx_leaf_id=self.__convertBwLeaves(tx_leaf_name,rx_leaf_name)
@@ -370,9 +378,9 @@ class ChargeActions:
             raise GeneralException(errorText("CHARGES","INVALID_CHARGE_RULE_ID")%charge_rule_id)
 
         self.__checkChargeRuleInCharge(charge_rule_id,charge_name)
-        
+
         return charge_rule_id
-        
+
 
     def __updateInternetChargeRuleDB(self,rule_obj):
         """
@@ -387,13 +395,13 @@ class ChargeActions:
         """
         return self.__updateInternetChargeRuleQuery(rule_obj) + \
                self.__updateChargeRulePortsAndDowsQuery(rule_obj)
-        
+
     def __updateChargeRulePortsAndDowsQuery(self,rule_obj):
         return self.__delChargeRulePortsQuery(rule_obj.getRuleID()) + \
                self.__delChargeRuleDowsQuery(rule_obj.getRuleID()) + \
                self.__addChargeRulePortsQuery(rule_obj.getPorts(),rule_obj.getRuleID()) + \
                self.__addChargeRuleDowsQuery(rule_obj.getDows(),rule_obj.getRuleID())
-               
+
 
     def __updateInternetChargeRuleQuery(self,rule_obj):
         """
@@ -415,11 +423,11 @@ class ChargeActions:
 
     def __delChargeRulePortsQuery(self,rule_id):
         return ibs_db.createDeleteQuery("charge_rule_ports","charge_rule_id=%s"%rule_id)
-        
-        
+
+
     def __delChargeRuleDowsQuery(self,rule_id):
         return ibs_db.createDeleteQuery("charge_rule_day_of_weeks","charge_rule_id=%s"%rule_id)
-        
+
 ######################
     def delChargeRule(self,charge_rule_id,charge_name):
         """
@@ -452,7 +460,7 @@ class ChargeActions:
             return query for compeletly removing charge rule from database
         """
         query=self.__delChargeRulePortsQuery(charge_rule_id)+ \
-             self.__delChargeRuleDowsQuery(charge_rule_id) 
+             self.__delChargeRuleDowsQuery(charge_rule_id)
 
         if charge_obj.getType()=="Internet":
             query+=self.__delInternetChargeRuleQuery(charge_rule_id)
@@ -485,7 +493,7 @@ class ChargeActions:
         self.__checkChargeUsage(charge_obj)
         self.__delChargeFromDB(charge_obj)
         charge_main.getLoader().unloadCharge(charge_obj.getChargeID())
-    
+
     def __checkChargeUsage(self,charge_obj):
         """
             check if charge used in any user/group, if so we can't delete it and we raise an exception
@@ -497,7 +505,7 @@ class ChargeActions:
         self.__checkChargeUsageInUsers(charge_obj,attr_name)
         self.__checkChargeUsageInGroups(charge_obj,attr_name)
 
-        
+
     def __checkChargeUsageInUsers(self,charge_obj,attr_name):
         user_ids=user_main.getActionManager().getUserIDsWithAttr(attr_name,charge_obj.getChargeID())
         if len(user_ids)>0:
@@ -509,7 +517,7 @@ class ChargeActions:
         if len(group_ids)>0:
             raise GeneralException(errorText("CHARGES","CHARGE_USED_IN_GROUP")%(charge_obj.getChargeName(),
                                                             ",".join([group_main.getLoader().getGroupByID(_id).getGroupName() for _id in group_ids])))
-        
+
 
     def __delChargeCheckInput(self,charge_name):
         """
@@ -526,11 +534,11 @@ class ChargeActions:
         ibs_query=IBSQuery()
         for charge_rule_id in charge_obj.getRules():
             ibs_query+=self.__delChargeRuleTotallyQuery(charge_rule_id,charge_obj)
-        
+
         ibs_query+=self.__delChargeQuery(charge_obj.getChargeID())
         ibs_query.runQuery()
-        
-        
+
+
     def __delChargeQuery(self,charge_id):
         """
             return query to delete the charge itself from charges table
@@ -553,7 +561,7 @@ class ChargeActions:
     def __voipChargeRuleCheckInput(self,charge_name,tariff_name,ras_id,ports):
         self.__chargeRuleCheckInput(charge_name,"VoIP",ras_id,ports)
         tariff_main.getLoader().getTariffByName(tariff_name)
-        
+
     def __createVoIPChargeRuleObject(self,charge_obj,start_time,end_time,day_of_week_container,tariff_id,ras_id,ports,charge_rule_id=None):
         """
             create an half complete rule object from arguments and return it
@@ -567,7 +575,7 @@ class ChargeActions:
         rule_info["tariff_id"]=tariff_id
 
         return charge_types.getChargeRuleObjForType("VoIP",rule_info,charge_obj,day_of_week_container,ports)
-        
+
     def __addVoIPChargeRuleToDB(self,rule_obj):
         """
             add rule_obj properties to DB
@@ -584,13 +592,13 @@ class ChargeActions:
         return self.__addVoIPChargeRuleQuery(rule_obj) + \
                self.__addChargeRulePortsQuery(rule_obj.getPorts(),rule_obj.getRuleID()) + \
                self.__addChargeRuleDowsQuery(rule_obj.getDows(),rule_obj.getRuleID())
-        
+
     def __addVoIPChargeRuleQuery(self,rule_obj):
         """
             return query for inserting rule_obj properties into charge_rules table
         """
         ras_id=self.__convertRasID(rule_obj.getRasID())
-        
+
         return ibs_db.createInsertQuery("voip_charge_rules",{"charge_id":rule_obj.charge_obj.getChargeID(),
                                                         "charge_rule_id":rule_obj.getRuleID(),
                                                         "start_time":dbText(rule_obj.start_time),
@@ -633,7 +641,7 @@ class ChargeActions:
         """
         return self.__updateVoIPChargeRuleQuery(rule_obj) + \
                self.__updateChargeRulePortsAndDowsQuery(rule_obj)
-        
+
     def __updateVoIPChargeRuleQuery(self,rule_obj):
         """
             return query for inserting rule_obj properties into charge_rules table
@@ -644,7 +652,7 @@ class ChargeActions:
                                                         "ras_id":ras_id,
                                                         "tariff_id":rule_obj.tariff_id,
                                                         },"charge_rule_id=%s"%rule_obj.getRuleID())
-    #############################################    
+    #############################################
     def getChargesWithBwLeaf(self, leaf_id):
         """
             return a list of charge_names that leaf_id is used in charge rules
@@ -657,8 +665,7 @@ class ChargeActions:
                     if rule_obj.bw_tx_leaf_id==leaf_id or rule_obj.bw_rx_leaf_id==leaf_id:
                         charge_names.append(charge_obj.getChargeName())
                         break
-        
 
-        charge_main.getLoader().runOnAllCharges(checkLeafInChargeObj)   
+
+        charge_main.getLoader().runOnAllCharges(checkLeafInChargeObj)
         return charge_names
-        

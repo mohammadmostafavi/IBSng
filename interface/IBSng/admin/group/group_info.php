@@ -14,7 +14,7 @@ else if(isInRequest("group_name"))
     intGroupInfo($smarty,$_REQUEST["group_name"]);
 else
 {
-    $err=new error("INVALID_INPUT");
+    $err=new ErrorHandler("INVALID_INPUT");
     redirectToGroupList($err->getErrorMsg());
 }
 
@@ -34,13 +34,13 @@ function intDelGroup(&$smarty,$group_name)
 function intGroupInfo(&$smarty,$group_name)
 {
     intSetGroupInfo($smarty,$group_name);
-  
+
 	if($smarty->is_assigned("owner_name"))
-	    $can_change = getCanChangeGroup($group_name, $smarty->get_assigned_value("owner_name"));    
-	
-	else	    
+	    $can_change = getCanChangeGroup($group_name, $smarty->get_assigned_value("owner_name"));
+
+	else
 		$can_change = FALSE;
-    
+
     $smarty->assign("can_change", $can_change);
     $smarty->assign("can_del",canDo("ADD NEW GROUP"));
     face($smarty);
@@ -53,11 +53,11 @@ function getCanChangeGroup($group_name, $group_owner)
 
 	else if(canDo("ACCESS ALL GROUPS"))
 		return TRUE;
-		
+
 	else if(canDo("CHANGE GROUP",null,$group_name))
 		return TRUE;
-	
-	return FALSE;			
+
+	return FALSE;
 }
 
 function face(&$smarty)

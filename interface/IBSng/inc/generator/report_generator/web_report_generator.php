@@ -26,7 +26,7 @@ class WebReportGenerator extends ReportGenerator
     function initSmartyValues()
     {
         $this->foreach_item = "\$row";
-        $this->generated_tpl_header_name = "generated_tpl_header"; 
+        $this->generated_tpl_header_name = "generated_tpl_header";
         $this->generated_tpl_body_name ="generated_tpl_body";
     }
 
@@ -56,7 +56,7 @@ class WebReportGenerator extends ReportGenerator
 
 	function getFieldForBodyTpl($footer_field)
 	{
-		$footer_field = ereg_replace(",[a-zA-Z0-9_]+", "", $footer_field);       
+		$footer_field = preg_replace("/,[a-zA-Z0-9_]+/", "", $footer_field);
 		return "{listTD} {{$this->foreach_item}.".$this->controller->creator->getRegisteredValue("root_node_name").".{$footer_field}} {/listTD}\n";
 	}
 
@@ -89,7 +89,7 @@ class WebReportGenerator extends ReportGenerator
 	{
 		$this->smarty_generation_mode = "fast_mode";
 	}
-	
+
 
     /**
      * set output formatter's name
@@ -131,12 +131,12 @@ class WebReportGenerator extends ReportGenerator
 }
 
 /**
- * 
+ *
  * $formala_prefixes array of prefixes
  * for deleting prefix of one formula
  * show__details__formula_name == deleting==> formaula_name
  * it is used for deletePrefixFromFormula($this->formula_prefixes, $formula_name)
- * 
+ *
  * */
 
 function deletePrefixFromFormula($prefixes, $formula_name)

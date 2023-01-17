@@ -6,11 +6,12 @@ checkReferrer();
  * Check for Invalid Referer
 */
 
-function checkReferrer()
+function checkReferrer(): void
 {
     $auth = getAuth();
-    if ($auth->getAuthType() == ADMIN_AUTH_TYPE and 
-	    !isRequestComesFromThisIBSngServer() and 
+//    Log::debug($auth);
+    if ($auth and $auth->getAuthType() == ADMIN_AUTH_TYPE and
+	    !isRequestComesFromThisIBSngServer() and
 	    !defined("ALLOW_INVALID_REFERRER"))
     {
     /**
@@ -63,7 +64,7 @@ function extractReferrerHostAndURI()
 /**
  * get uri of current page
  * http://parspooyesh.com/IBSng/user/home.php for example
- * 
+ *
  * @return string
  * */
 function getCurrentHostAndURI()
@@ -105,7 +106,7 @@ function extractHostAndPathFromURL($url)
  * example :
  *      for one who login as (USER|ADMIN|UTIL|...) this function
  *      will be return /XXX/(user|admin|util|...)/
- * 
+ *
  * @string string URI of login page, admin login page string as default(if error occured)
  * */
 function getLoginPageURI()
