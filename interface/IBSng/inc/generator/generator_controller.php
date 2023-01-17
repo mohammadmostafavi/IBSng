@@ -55,13 +55,13 @@ class GeneratorController
 	/**
 	 * for any variable of REQUEST if it start with $selector_expression then is added to return array.
 	 * example :
-	 * 		getReportSelectors("show__") return an array that contains this variables 
+	 * 		getReportSelectors("show__") return an array that contains this variables
 	 * 		"show__details_username", "show__derails_userid", ... that this variables come from
 	 * 		REQUEST.
-	 * 
-	 * @param string $begin_expression like this : show__details_ each var that start with this 
-	 * 		expression will be selected 
-	 * @return array 
+	 *
+	 * @param string $begin_expression like this : show__details_ each var that start with this
+	 * 		expression will be selected
+	 * @return array
 	 * */
 	function getReportSelectors($begin_expression = "show__") {
 		$selectors = array ();
@@ -69,7 +69,7 @@ class GeneratorController
 
 		// searching in REQUEST and find selectors each selector start with $selector_start
 		foreach ($_REQUEST as $field_name => $field_formula)
-			if (ereg("^" . $begin_expression . ".*", $field_formula))
+			if (preg_match("/^" . $begin_expression . ".*/", $field_formula))
 				$selectors[str_replace( array_keys($search_replace),
 						  	array_values($search_replace),
 						  	$field_name)] = $field_formula;
@@ -86,7 +86,7 @@ class GeneratorController
     {
         $this->__generators = array_merge(array($generator_name => $generator_function), $this->__generators);
     }
-	
+
 	function getGenerators ()
 	{
 	    return $this->__generators;

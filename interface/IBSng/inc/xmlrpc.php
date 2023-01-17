@@ -37,12 +37,12 @@ class IBSxmlrpc
         $xml_msg->addParam($xml_val);
         return $xml_msg;
     }
-    
+
     function __sendXmlRpcRequest($xml_rpc_msg,$timeout)
     {
         return $this->client->send($xml_rpc_msg,$timeout);
     }
-    
+
     function __returnResponse($response)
     {
         if ($response==FALSE)
@@ -55,14 +55,14 @@ class IBSxmlrpc
 
     function __returnError($err_str)
     {
-        return array(FALSE,new Error($err_str));
+        return array(FALSE,new ErrorHandler($err_str));
     }
-    
+
     function __returnSuccess($value)
     {
         return array(TRUE,php_xmlrpc_decode($value));
     }
-    
+
 }
 
 ?>

@@ -7,10 +7,12 @@ define("DEFAULT_LANGUAGE","en");
 define("TimeZone","Asia/Tehran");
 
 
-define("IBSNG_VERSION","P1.24");
+define("IBSNG_VERSION","P3.24");
 
-define("IBS_ROOT","/usr/local/IBSng/");
+
+define("IBS_ROOT",dirname(getcwd(), 3)."/");
 define("INTERFACE_ROOT",IBS_ROOT."interface/");
+//define("INTERFACE_ROOT","/var/www/html/");
 define("IMAGES_ROOT",INTERFACE_ROOT."IBSng/images/");
 
 define("JPGRAPH_ROOT",INTERFACE_ROOT."jpgraph/");

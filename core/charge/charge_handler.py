@@ -20,7 +20,7 @@ class ChargeHandler(handler.Handler):
         self.registerHandlerMethod("updateVoIPChargeRule")
 
 
-        
+
     def addNewCharge(self,request):
         request.needAuthType(request.ADMIN)
         request.checkArgs("name","comment","charge_type","visible_to_all")
@@ -36,17 +36,17 @@ class ChargeHandler(handler.Handler):
             NOTE: this handler take care of admin permissions and return only charges that admin
                   has access to
 
-            type(string,optional): type of charges                
+            type(string,optional): type of charges
         """
         request.needAuthType(request.ADMIN)
         requester=request.getAuthNameObj()
         charge_names=charge_main.getLoader().getAllChargeNames()
 
         def filter_func(charge_name):
-            if "charge_type" in request and charge_main.getLoader().getChargeByName(charge_name).getType()!=request["charge_type"]:
+            if "charge_type" in request.params and charge_main.getLoader().getChargeByName(charge_name).getType()!=request["charge_type"]:
                 return False
-            return requester.canUseCharge(charge_name) 
-            
+            return requester.canUseCharge(charge_name)
+
         charge_names = list(filter(filter_func,charge_names))
 
         sorted_charge_names = SortedList(charge_names)
@@ -55,10 +55,10 @@ class ChargeHandler(handler.Handler):
 
     def getChargeInfo(self,request):
         request.needAuthType(request.ADMIN)
-        if "charge_name" in request:
-            charge_obj=charge_main.getLoader().getChargeByName(request["charge_name"])
-        elif "charge_id" in request:
-            charge_obj=charge_main.getLoader().getChargeByID(to_int(request["charge_id"],"charge id"))
+        if "charge_name" in request.params:
+            charge_obj=charge_main.getLoader().getChargeByName(request.params["charge_name"])
+        elif "charge_id" in request.params:
+            charge_obj=charge_main.getLoader().getChargeByID(to_int(request.params["charge_id"],"charge id"))
         else:
             request.raiseIncompleteRequest("charge_name")
         request.getAuthNameObj().canUseCharge(charge_obj.getChargeName())
@@ -105,12 +105,12 @@ class ChargeHandler(handler.Handler):
             ports=[charge_rule.ChargeRule.ALL]
         else:
             ports=requestDicToList(request["ports"])
-            
+
         if request["ras"]=="_ALL_":
             ras=charge_rule.ChargeRule.ALL
         else:
             ras=ras_main.getLoader().getRasByIP(request["ras"]).getRasID()
-        
+
         return (ras,ports)
 
     def listChargeRules(self,request):
@@ -122,7 +122,7 @@ class ChargeHandler(handler.Handler):
         sorted=SortedList(infos)
         sorted.sortByPostText('["rule_id"]',0)
         return sorted.getList()
-        
+
     def delChargeRule(self,request):
         request.needAuthType(request.ADMIN)
         request.checkArgs("charge_name","charge_rule_id")
@@ -154,4 +154,3 @@ class ChargeHandler(handler.Handler):
         return charge_main.getActionManager().updateVoIPChargeRule(request["charge_name"],
                         request["charge_rule_id"],request["rule_start"],request["rule_end"],
                         request.fixList("dows"),request["tariff_name"],ras,ports)
-        

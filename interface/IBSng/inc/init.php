@@ -1,5 +1,6 @@
 <?php
 require_once ("defs.php");
+require_once (IBSINC."helpers.php");
 require_once (IBSINC."session.php");
 require_once (IBSINC."errors.php");
 require_once (IBSINC."error.php");

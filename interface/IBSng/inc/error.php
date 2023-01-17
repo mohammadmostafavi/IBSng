@@ -14,6 +14,7 @@ function errorHandler($errno, $errstr, $errfile, $errline)
 function toLog($msg)
 {
     if (!array_key_exists("log_handler", $GLOBALS)) {
+
         $fh = fopen("/var/log/IBSng/ibs_interface.log", "a+");
         if (!$fh)
             return;

@@ -9,7 +9,7 @@ class LoginHandler(handler.Handler):
     def __init__(self):
         handler.Handler.__init__(self,"login")
         self.registerHandlerMethod("login")
-    
+
     def login(self,request):
         request.checkArgs("login_auth_name","login_auth_type","login_auth_pass")
         if request["login_auth_type"]==request.ADMIN:
@@ -18,10 +18,10 @@ class LoginHandler(handler.Handler):
 
         elif request["login_auth_type"]==request.NORMAL_USER:
             user_main.getServerAuth().checkAuth(request["login_auth_name"],Password(request["login_auth_pass"]),request["login_auth_type"])
-            
+
         elif request["login_auth_type"]==request.VOIP_USER:
             user_main.getServerAuth().checkAuth(request["login_auth_name"],Password(request["login_auth_pass"]),request["login_auth_type"])
-            
+
         elif request["login_auth_type"]==request.MAIL:
             pass
 
@@ -32,4 +32,3 @@ class LoginHandler(handler.Handler):
             raise GeneralException(errorText("GENERAL","ACCESS_DENIED"))
 
         return True
-                

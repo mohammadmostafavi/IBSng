@@ -180,14 +180,14 @@
 	*/
 	function xmlrpc_entity_decode($string)
 	{
-		$top=split('&', $string);
+		$top=preg_split('/&/', $string);
 		$op='';
 		$i=0;
 		while($i<sizeof($top))
 		{
-			if (ereg("^([#a-zA-Z0-9]+);", $top[$i], $regs))
+			if (preg_match("/^([#a-zA-Z0-9]+);/", $top[$i], $regs))
 			{
-				$op.=ereg_replace("^[#a-zA-Z0-9]+;",
+				$op.=preg_replace("/^[#a-zA-Z0-9]+;/",
 				xmlrpc_lookup_entity($regs[1]),
 				$top[$i]);
 			}
@@ -215,7 +215,7 @@
 		{
 			return $xmlEntities[strtolower($ent)];
 		}
-		if (ereg("^#([0-9]+)$", $ent, $regs))
+		if (preg_match("/^#([0-9]+)$/", $ent, $regs))
 		{
 			return chr($regs[1]);
 		}
@@ -481,7 +481,7 @@
 		return strtr($data, $entities);
 	}
 
-	function xmlrpc_encode_entitites($data) 
+	function xmlrpc_encode_entitites($data)
 	{
 		$length = strlen($data);
 		$escapeddata = "";
@@ -652,7 +652,7 @@
 				{
 					// we have a DOUBLE
 					// we must check that only 0123456789-.<space> are characters here
-					if (!ereg("^[+-]?[eE0123456789 \\t\\.]+$", $_xh[$parser]['ac']))
+					if (!preg_match("/^[+-]?[eE0123456789 \\t\\.]+$/", $_xh[$parser]['ac']))
 					{
 						// TODO: find a better way of throwing an error
 						// than this!
@@ -669,7 +669,7 @@
 				{
 					// we have an I4/INT
 					// we must check that only 0123456789-<space> are characters here
-					if (!ereg("^[+-]?[0123456789 \\t]+$", $_xh[$parser]['ac']))
+					if (!preg_match("/^[+-]?[0123456789 \\t]+$/", $_xh[$parser]['ac']))
 					{
 						// TODO: find a better way of throwing an error
 						// than this!
@@ -721,7 +721,7 @@
 				$_xh[$parser]['params'][]=$_xh[$parser]['st'];
 				break;
 			case 'METHODNAME':
-				$_xh[$parser]['method']=ereg_replace("^[\n\r\t ]+", '', $_xh[$parser]['ac']);
+				$_xh[$parser]['method']=preg_replace("/^[\n\r\t ]+/", '', $_xh[$parser]['ac']);
 				break;
 			// BOOLEAN HAS BEEN ENUMERATED ABOVE!
 			/*case 'BOOLEAN':
@@ -753,7 +753,7 @@
 
 		$parser=(int)$parser;
 
-		//if (ereg("^[\n\r \t]+$", $data)) return;
+		//if (preg_match("/^[\n\r \t]+$/", $data)) return;
 		// print "adding [${data}]\n";
 
 		if ($_xh[$parser]['lv']!=3)
@@ -868,7 +868,7 @@
 			else
 			{
 				return $this->sendPayloadHTTP10($msg, $this->server, $this->port,
-				$timeout, $this->username, 
+				$timeout, $this->username,
 				$this->password);
 			}
 		}
@@ -916,7 +916,7 @@
 			$op= "POST " . $this->path. " HTTP/1.0\r\n" .
 				"User-Agent: " . $xmlrpcName . " " . $xmlrpcVersion . "\r\n" .
 				"Host: ". $server . "\r\n" .
-				$credentials . 
+				$credentials .
 				"Accept-Charset: " . $xmlrpc_defencoding . "\r\n" .
 				"Content-Type: text/xml\r\nContent-Length: " .
 				strlen($msg->payload) . "\r\n\r\n" .
@@ -1200,7 +1200,7 @@
 			else
 			{
 				$result .= "<params>\n<param>\n" .
-					$this->val->serialize() . 
+					$this->val->serialize() .
 					"</param>\n</params>";
 			}
 			$result .= "\n</methodResponse>";
@@ -1304,10 +1304,10 @@
 			}
 			// see if we got an HTTP 200 OK, else bomb
 			// but only do this if we're using the HTTP protocol.
-			if(ereg("^HTTP",$data))
+			if(preg_match("/^HTTP/",$data))
 			{
 				// Strip HTTP 1.1 100 Continue header if present
-				while (ereg('^HTTP/1.1 1[0-9]{2}', $data))
+				while (preg_match('/^HTTP/1.1 1[0-9]{2}/', $data))
 				{
 					$pos = strpos($data, 'HTTP', 12);
 					// server sent a Continue header without any (valid) content following...
@@ -1316,7 +1316,7 @@
 						break;
 					$data = substr($data, $pos);
 				}
-				if (!ereg("^HTTP/[0-9\\.]+ 200 ", $data))
+				if (!preg_match("/^HTTP\/[0-9\\.]+ 200 /", $data))
 				{
 					$errstr= substr($data, 0, strpos($data, "\n")-1);
 					error_log('HTTP error, got response: ' .$errstr);
@@ -1334,7 +1334,7 @@
 			$_xh[(int)$parser]['headers'] = array();
 
 			// separate HTTP headers from data
-			if (ereg("^HTTP", $data))
+			if (preg_match("/^HTTP/", $data))
 			{
 				// be tolerant to usage of \n instead of \r\n to separate headers and data
 				// (even though it is not valid http)
@@ -1353,7 +1353,7 @@
 					}
 				}
 				// be tolerant to line endings, and extra empty lines
-				$ar = split("\r?\n", trim(substr($data, 0, $pos)));
+				$ar = preg_split("/\r?\n/", trim(substr($data, 0, $pos)));
 				while (list(,$line) = @each($ar))
 				{
 					// take care of multi-line headers
@@ -1798,8 +1798,8 @@
 		//
 		// "Don't assume a timezone. It should be specified by the server in its
 		// documentation what assumptions it makes about timezones."
-		// 
-		// these routines always assume localtime unless 
+		//
+		// these routines always assume localtime unless
 		// $utc is set to 1, in which case UTC is assumed
 		// and an adjustment for locale is made when encoding
 		if (!$utc)
@@ -1826,7 +1826,7 @@
 	{
 		// return a timet in the localtime, or UTC
 		$t=0;
-		if (ereg("([0-9]{4})([0-9]{2})([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})", $idate, $regs))
+		if (preg_match("/([0-9]{4})([0-9]{2})([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})/", $idate, $regs))
 		{
 			if ($utc)
 			{
@@ -1836,7 +1836,7 @@
 			{
 				$t=mktime($regs[4], $regs[5], $regs[6], $regs[2], $regs[3], $regs[1]);
 			}
-		} 
+		}
 		return $t;
 	}
 
@@ -1972,9 +1972,9 @@
 			//case 'unknown type':
 			default:
 				// giancarlo pinerolo <ping@alt.it>
-				// it has to return 
+				// it has to return
 				// an empty object in case (which is already
-				// at this point), not a boolean. 
+				// at this point), not a boolean.
 				break;
 			}
 			return $xmlrpc_val;
@@ -2023,9 +2023,9 @@
 				//case 'unknown type':
 				default:
 					// giancarlo pinerolo <ping@alt.it>
-					// it has to return 
+					// it has to return
 					// an empty object in case (which is already
-					// at this point), not a boolean. 
+					// at this point), not a boolean.
 					break;
 			}
 			return $xmlrpc_val;

@@ -21,8 +21,8 @@ class AdminActions:
         self.__addNewAdminDB(admin_id,username,password.getMd5Crypt(),name,comment,creator_id)
         self.__getAdminLoader().loadAdmin(admin_id)
         return admin_id
-    
-    
+
+
     def __getNewAdminID(self):
         """
             return a new unique admin id
@@ -41,7 +41,7 @@ class AdminActions:
     def __addNewAdminIASQuery(self, username, creator_id):
         creator_username=admin_main.getLoader().getAdminByID(creator_id).getUsername()
         return ias_main.getActionsManager().logEvent("ADD_ADMIN",creator_username,0,username)
-        
+
     def __addNewAdminQuery(self,admin_id,username,password,name,comment,creator_id):
         """
             return query to insert new admin
@@ -59,19 +59,19 @@ class AdminActions:
     def __addNewAdminCheckInput(self,username,password,name,comment,creator_id):
         if not self.__getAdminLoader().adminNameAvailable(username):
             raise GeneralException(errorText("ADMIN","ADMIN_USERNAME_TAKEN")%username)
-            
+
         if self.__checkAdminUserChars(username) != 1:
             raise GeneralException(errorText("ADMIN","BAD_USERNAME")%username)
 
         if password.checkPasswordChars() != 1:
             raise GeneralException(errorText("ADMIN","BAD_PASSWORD"))
-        
+
         self.__getAdminLoader().checkAdminID(creator_id)
 
     def __checkAdminUserChars(self,username):
-        if not len(username) or username[0] not in string.letters:                 
+        if not len(username) or username[0] not in string.ascii_letters:
             return 0
-        if re.search("[^A-Za-z0-9_]",username) != None:                 
+        if re.search("[^A-Za-z0-9_]",username) != None:
             return 0
         return 1
 
@@ -84,10 +84,10 @@ class AdminActions:
             username(string): admin username
             password(password instance): New Password instance
         """
-        self.__changePasswordCheckInput(username,password)      
+        self.__changePasswordCheckInput(username,password)
         self.__changePasswordDB(username,password.getMd5Crypt())
         self.__getAdminLoader().loadAdminByName(username)
-    
+
     def __changePasswordCheckInput(self,username,password):
         self.__getAdminLoader().checkAdminName(username)
 
@@ -99,21 +99,21 @@ class AdminActions:
                       {"password":dbText(password)},
                       "username=%s"%dbText(username)
                      )
-    
-    
+
+
     #####################
 
     def __getAdminLoader(self):
         return admin_main.getLoader()
 
     ####################
-    
+
     def updateInfo(self,admin_username,name,comment):
         self.__updateInfoCheckInput(admin_username,name,comment)
         admin_obj=self.__getAdminLoader().getAdminByName(admin_username)
         self.__updateInfoDB(admin_obj,name,comment)
         self.__getAdminLoader().loadAdmin(admin_obj.getAdminID())
-    
+
     def __updateInfoDB(self,admin_obj,name,comment):
         query=self.__updateInfoQuery(admin_obj.getAdminID(),name,comment)
         db_main.getHandle().transactionQuery(query)
@@ -131,8 +131,8 @@ class AdminActions:
     ######################
     def consumeDeposit(self,admin_username,deposit,need_query=True):
         """
-            consume "deposit" amount of deposit from admin with username "admin_username" and return 
-            the query to commit it into database. 
+            consume "deposit" amount of deposit from admin with username "admin_username" and return
+            the query to commit it into database.
             The caller must take care of readding deposit, if commit of query into database failed.
             This method may raise exception in case of admin doesn't have enough deposit. In such cases caller
             doesn't need to readd deposit!
@@ -145,29 +145,29 @@ class AdminActions:
             if new_deposit<0:
                 admin_obj.canDo("NO DEPOSIT LIMIT")
         except PermissionException: #negative deposit not allowed!
-            admin_obj.consumeDeposit(-1*deposit) 
+            admin_obj.consumeDeposit(-1*deposit)
             raise GeneralException(errorText("ADMIN","NEGATIVE_DEPOSIT_NOT_ALLOWED")%deposit)
-        
+
         if need_query:
             return self.consumeDepositQuery(admin_obj.getAdminID(),deposit)
-        
+
     def consumeDepositQuery(self,admin_id,deposit):
         return ibs_db.createUpdateQuery("admins",
                                         {"deposit":"deposit - %s"%deposit},
                                         "admin_id=%s"%admin_id)
 
-        
+
     ##############################
     def changeDeposit(self,changer_admin_name,admin_name,deposit_change,comment,remote_addr):
         """
             change deposit of admin "admin_name"
-            
+
             changer_admin_name(str): name of admin, changing the deposit
             admin_name(str): name of admin that deposit changes
             deposit_change(float): amount of change
             comment(str):
             remote_addr(str): remote ip address of deposit changer
-        """         
+        """
         self.__changeDepositCheckInput(changer_admin_name,admin_name,deposit_change,comment,remote_addr)
         changer_admin_obj=self.__getAdminLoader().getAdminByName(changer_admin_name)
         admin_obj=self.__getAdminLoader().getAdminByName(admin_name)
@@ -186,14 +186,14 @@ class AdminActions:
     def __changeDepositCheckInput(self,changer_admin_name,admin_name,deposit_change,comment,remote_addr):
         self.__getAdminLoader().checkAdminName(changer_admin_name)
         self.__getAdminLoader().checkAdminName(admin_name)
-        
+
         if not isFloat(deposit_change):
             raise GeneralException(errorText("ADMIN","DEPOSIT_SHOULD_BE_FLOAT"))
-        
+
         if not iplib.checkIPAddr(remote_addr):
             raise GeneralException(errorText("GENERAL","INVALID_IP_ADDRESS")%remote_addr)
 
-    
+
     def __changeDepositQuery(self,admin_id,deposit_change):
         return "update admins set deposit = deposit + %s where admin_id = %s ; "%(deposit_change,admin_id)
 
@@ -209,7 +209,7 @@ class AdminActions:
         self.__reloadGroups(admin_obj.getAdminID())
         self.__reloadUsers(admin_obj.getAdminID())
         self.__reloadAdmins(admin_obj.getAdminID())
-        
+
     def __reloadUsers(self, admin_id):
         """
             reload users whom owner is deleted admin
@@ -227,7 +227,7 @@ class AdminActions:
             except GeneralException:
                 pass
 
-            if group_obj.getOwnerID()==admin_id:        
+            if group_obj.getOwnerID()==admin_id:
                 group_main.getLoader().loadGroupByName(group_name)
 
     def __reloadAdmins(self, admin_id):
@@ -246,8 +246,8 @@ class AdminActions:
                             break
             except:
                 logException(LOG_DEBUG)
-                
-    
+
+
 
     def __deleteAdminCheckInput(self, deleter_admin, admin_name):
         self.__getAdminLoader().checkAdminName(admin_name)
@@ -269,7 +269,7 @@ class AdminActions:
 
     def __deleteAdminIASQuery(self, deleter_admin, admin_obj):
         return ias_main.getActionsManager().logEvent("DELETE_ADMIN",deleter_admin,admin_obj.deposit,admin_obj.getUsername())
-        
+
     def __deleteAdminQuery(self, admin_id):
         return ibs_db.createDeleteQuery("admins","admin_id = %s"%admin_id)
 
@@ -289,10 +289,10 @@ class AdminActions:
 
 
     def __delAdminUpdateUserOwnersQuery(self, admin_id):
-        return ibs_db.createUpdateQuery("users",{"owner_id":0},"owner_id = %s"%admin_id)        
+        return ibs_db.createUpdateQuery("users",{"owner_id":0},"owner_id = %s"%admin_id)
 
     def __delAdminUpdateGroupOwnersQuery(self, admin_id):
-        return ibs_db.createUpdateQuery("groups",{"owner_id":0},"owner_id = %s"%admin_id)       
+        return ibs_db.createUpdateQuery("groups",{"owner_id":0},"owner_id = %s"%admin_id)
 
     def __delAdminUpdateAdminLockersQuery(self, admin_id):
         return ibs_db.createUpdateQuery("admin_locks",{"locker_admin_id":0},"locker_admin_id = %s"%admin_id)
@@ -323,13 +323,13 @@ class AdminActions:
 
     def __lockAdminDB(self, admin_id, reason, locker_admin_id):
         db_main.getHandle().transactionQuery(self.__lockAdminQuery(admin_id, reason, locker_admin_id))
-        
+
     def __lockAdminQuery(self, admin_id, reason, locker_admin_id):
         return ibs_db.createInsertQuery("admin_locks",{"admin_id":admin_id,
                                                        "reason":dbText(reason),
                                                        "locker_admin_id":locker_admin_id,
                                                        "lock_id":"nextval('admin_locks_lock_id_seq')"})
-        
+
     ##################################################
     def unlockAdmin(self, admin_name, lock_id):
         self.__unlockAdminCheckInput(admin_name, lock_id)
@@ -344,7 +344,6 @@ class AdminActions:
 
     def __unlockAdminDB(self, admin_id, lock_id):
         db_main.getHandle().transactionQuery(self.__unlockAdminQuery(admin_id, lock_id))
-        
+
     def __unlockAdminQuery(self, admin_id, lock_id):
         return ibs_db.createDeleteQuery("admin_locks","admin_id=%s and lock_id=%s"%(admin_id,lock_id))
-        

@@ -44,7 +44,6 @@ class XMLRPCRequestHandler(http.server.BaseHTTPRequestHandler):
         Attempts to interpret all HTTP POST requests as XML-RPC calls,
         which are forwarded to the _dispatch method for handling.
         """
-
         try:
             # get arguments
             data = self.rfile.read(int(self.headers["content-length"]))
@@ -75,7 +74,7 @@ class XMLRPCRequestHandler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/xml")
             self.send_header("Content-length", str(len(response)))
             self.end_headers()
-            self.wfile.write(response)
+            self.wfile.write(response.encode())
 
             # shut down the connection
             self.wfile.flush()
@@ -96,7 +95,7 @@ class XMLRPCRequestHandler(http.server.BaseHTTPRequestHandler):
             self.log_message(*[format] + args)
 
         # handle request
-        params = self.__convToUTF8(params)
+        # params = self.__convToUTF8(params)
         ret_val = handlers_manager.getManager().dispatch(method, params, self.client_address)
 
         # update statistics
@@ -116,7 +115,9 @@ class XMLRPCRequestHandler(http.server.BaseHTTPRequestHandler):
                 param[key] = self.__convToUTF8(param[key])
 
         elif type(param) == list or type(param) == tuple:
-            param = list(map(self.__convToUTF8, param))
+            for i in range(len(param)):
+                param[i] = self.__convToUTF8(param[i])
+            # param = list(map(self.__convToUTF8, param))
 
         elif type(param) == str:
             param = param.encode("utf-8")

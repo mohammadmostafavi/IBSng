@@ -28,10 +28,11 @@ function goAdminIndex()
 
 function face($err=NULL)
 {
-    $smarty=new IBSSmarty();
-    if(!is_null($err))
+    $smarty = new IBSSmarty();
+    if (!is_null($err)) {
         $smarty->set_page_error($err->getErrorMsgs());
-    $smarty->display("admin/index.tpl");    
+    }
+    $smarty->display("admin/index.tpl");
 }
 
 

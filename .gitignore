@@ -4,3 +4,4 @@
 *.dll
 .venv
 logs/
+templates_c/
