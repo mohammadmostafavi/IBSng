@@ -4,6 +4,9 @@ from core.ibs_exceptions import *
 from core.lib.jalali import *
 import time,re
 
+def cmp(a, b):
+    return (a > b) - (a < b)
+
 def dbTimeFromEpoch(epoch_time):
     return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(epoch_time))
 

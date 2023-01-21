@@ -78,7 +78,7 @@ def start():
         print("Successfully initialized, entering event loop ...")
         writePID(os.getpid())
 
-        sys.setcheckinterval(500)
+        sys.setswitchinterval(500)
         event.startLoop()
 
     else:

@@ -137,9 +137,9 @@ class ChargeRule:
         if secondsFromMorning(_time) == 23*3600+59*60+59:
             _time += 1
 
-            if not self.interval.containsTime(_time):
-                return False
-            return self.anytimeAppliable(user_obj, instance)
+        if not self.interval.containsTime(_time):
+            return False
+        return self.anytimeAppliable(user_obj, instance)
 
 
     def anytimeAppliable(self,user_obj,instance):

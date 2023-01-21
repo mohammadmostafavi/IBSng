@@ -1,7 +1,8 @@
 from core.lib import *
 from core.ibs_exceptions import *
 from core import defs
-from radius_server.pyrad import dictionary, packet, server
+# from radius_server.pyrad import dictionary, packet, server
+from pyrad import dictionary, packet, server
 from core.ras import ras_main
 from core.stats import stat_main
 from radius_server import rad_main
@@ -51,6 +52,43 @@ class IBSRadiusServer(server.Server):
                 log_str += " \n".join(attrs)
                 toLog(log_str + "\n",LOG_RADIUS)
 
+        def HandleAuthPacket(self, request_pkt):
+            func = self.processAuthPacket
+            stat_name_prefix = "auth"
+            if defs.LOG_RADIUS_REQUESTS:
+                self.__logRequest(request_pkt)
+            request_obj = rad_main.getRequestList().getRequest(request_pkt)
+            if request_obj is not None:
+                toLog("Duplicate Packet from %s:%s id %s"%(request_obj.getRequestPacket().source[0], \
+                                                           request_obj.getRequestPacket().source[1], \
+                                                           request_obj.getRequestPacket().id), LOG_DEBUG)
+
+                stat_main.getStatKeeper().inc("%s_duplicate_packets"%stat_name_prefix)
+
+                if request_obj.isFinished(): #reply has alreay sent
+                    self.SendReplyPacket(request_pkt.fd, request_obj.getResponsePacket())
+            else:
+                rad_main.getRequestList().addRequest(request_pkt)
+                thread_main.runThread(self.__runPacketHandler,(func, request_pkt.fd, request_pkt, stat_name_prefix),"radius")
+
+        def HandleAcctPacket(self, request_pkt):
+            func = self.processAcctPacket
+            stat_name_prefix = "acct"
+            if defs.LOG_RADIUS_REQUESTS:
+                self.__logRequest(request_pkt)
+            request_obj = rad_main.getRequestList().getRequest(request_pkt)
+            if request_obj is not None:
+                toLog("Duplicate Packet from %s:%s id %s"%(request_obj.getRequestPacket().source[0], \
+                                                           request_obj.getRequestPacket().source[1], \
+                                                           request_obj.getRequestPacket().id), LOG_DEBUG)
+
+                stat_main.getStatKeeper().inc("%s_duplicate_packets"%stat_name_prefix)
+
+                if request_obj.isFinished():
+                    self.SendReplyPacket(request_pkt.fd, request_obj.getResponsePacket())
+            else:
+                rad_main.getRequestList().addRequest(request_pkt)
+                thread_main.runThread(self.__runPacketHandler,(func, request_pkt.fd, request_pkt, stat_name_prefix),"radius")
 
         def processAuthPacket(self, fd, request_pkt, reply_pkt):
                 success=False

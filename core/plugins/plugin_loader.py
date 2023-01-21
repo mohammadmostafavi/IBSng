@@ -6,7 +6,7 @@ import imp
 def init():
     global plugin_loader
     plugin_loader=PluginLoader()
-    
+
 def loadPlugins(directory):
     """
         load plugins in "directory"
@@ -17,9 +17,9 @@ class PluginLoader:
     def initPlugins(self,directory):
         """
             directory(text): directory path to search for plugins
-            
+
             return all loaded module object
-            
+
             call init function of all *.py files in "directory"
             they must register themselves somewhere
             ex. user plugins should user plugins.registerUserPlugin
@@ -40,7 +40,7 @@ class PluginLoader:
                 pass
             except:
                 logException(LOG_ERROR,"PluginLoader.__callInits")
-    
+
     def __loadModules(self,file_list,directory):
         """
             load and import all files in "file_list" in path "directory"

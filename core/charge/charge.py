@@ -19,9 +19,9 @@ class Charge:
             name (string): name of charge
             comment (string): comment
             admin_id (integer): id of admin who created this charge
-            visible_default (boolean): if visible default is set to 1 then all admins can use this group without a 
+            visible_default (boolean): if visible default is set to 1 then all admins can use this group without a
                                        special permission
-            _type (string): _type of charge (VoIP or Internet) 
+            _type (string): _type of charge (VoIP or Internet)
         """
 
         self.charge_id=charge_id
@@ -42,7 +42,7 @@ class Charge:
 
     def isVoIPCharge(self):
         return self.getType()=="VoIP"
-        
+
     def getChargeID(self):
         return self.charge_id
 
@@ -67,22 +67,22 @@ class Charge:
     def initUser(self,user_obj):
         """
             called when a user logins
-            
+
             user_obj: object of user
                     user_obj.instance show the instance of that logged in
-            
+
         """
         pass
 
-        
+
     def startAccounting(self,user_obj,instance):
         """
             call to notify accounting of user should be started
         """
         user_obj.charge_info.accounting_started[instance-1]=time.time()
-        
 
-    def logout(self,user_obj,instance): 
+
+    def logout(self,user_obj,instance):
         """
             called when logout event of user occures or when the user login was not successful
         """
@@ -90,14 +90,14 @@ class Charge:
 
 
     def checkLimits(self,user_obj):
-        """     
-            called when an event (login,logout,rule change,credit finish..) occures, 
-                
-            returns (time_till_next_event,{dictionary of instance:kill reason}) 
+        """
+            called when an event (login,logout,rule change,credit finish..) occures,
+
+            returns (time_till_next_event,{dictionary of instance:kill reason})
             time_till_next_event == 0 means no event should be set
         """
         return (0,"Limited group")
-        
+
     def calcUserAvailableTime(self,user_obj):
         """
             return seconds that user can be online with current conditions
@@ -107,23 +107,23 @@ class Charge:
         """
         return -1
 
-    def commit(self,user_obj): 
+    def commit(self,user_obj):
         """
             saves all user info (rule usage) from memory into db
         """
         pass
-        
+
 
 #-----------------------------------------------------------------------------------------------------------
 class ChargeWithRules(Charge):
 
     def __init__(self,charge_id,name,comment,admin_id,visible_to_all,_type):
-        Charge.__init__(self,charge_id,name,comment,admin_id,visible_to_all,_type)
+        super().__init__(charge_id,name,comment,admin_id,visible_to_all,_type)
         self.rules={} #{rule_id=>rule_obj}
 
     def getRules(self):
         return self.rules
-    
+
     def initUser(self,user_obj):
         Charge.initUser(self,user_obj)
 
@@ -139,12 +139,12 @@ class ChargeWithRules(Charge):
         user_obj.charge_info.login(user_obj.instances)
 
         #check if user has an effective rule
-        self.getEffectiveRule(user_obj, user_obj.instances) 
+        self.getEffectiveRule(user_obj, user_obj.instances)
 
-    
+
     def startAccounting(self,user_obj,instance):
         #effectice rule may have been changed
-        effective_rule=self.getEffectiveRule(user_obj, instance) 
+        effective_rule=self.getEffectiveRule(user_obj, instance)
         user_obj.charge_info.setEffectiveRule(instance, effective_rule)
 
         Charge.startAccounting(self,user_obj,instance)
@@ -164,7 +164,7 @@ class ChargeWithRules(Charge):
     def getEffectiveRule(self,user_obj,instance):
         """
             return currently applicable rule
-            
+
             user_obj (User.User instance):
             instance(integer): instance of user which we want rule for
         """
@@ -174,28 +174,28 @@ class ChargeWithRules(Charge):
         """
             return applicable rule for _time
             _time(int): epoch time in seconds
-        """     
+        """
         max_priority=-1
         max_applicable_rule=None
-        
+
         for rule_id in self.rules:
             rule=self.rules[rule_id]
             if rule.priority > max_priority and rule.appliable(user_obj,instance,_time):
                 max_priority=rule.priority
                 max_applicable_rule=rule
-                
+
         if max_priority==-1:
             raise LoginException(errorText("USER_LOGIN","NO_APPLICABLE_RULE"))
 
         return max_applicable_rule
-        
+
     def getNextMoreApplicableRule(self,user_obj, instance):
         """
             return next more applicable rule or None when there's no next more applicable rule
-            
+
             user_obj (User.User instance):
             instance(integer): instance of user which we want rule for
-            
+
         """
         cur_rule=user_obj.charge_info.effective_rules[instance-1]
         return self._getNextMoreApplicableRuleForTime(user_obj, instance, cur_rule, time.time())
@@ -203,22 +203,22 @@ class ChargeWithRules(Charge):
     def _getNextMoreApplicableRuleForTime(self,user_obj, instance, cur_rule, _time):
         """
             return next more applicable rule or None when there's no next more applicable rule
-            
+
             user_obj (User.User instance):
             instance(integer): instance of user which we want rule for
             _time(long): seconds from epoch
         """
-        
+
         earliest_more_applicable_rule = None
         secs=secondsFromMorning(_time)
-        
+
         for rule_id in self.rules:
             rule=self.rules[rule_id]
             if rule.interval.containsDay(_time) and rule.interval > secs:
                 if rule.priority>cur_rule.priority and rule.anytimeAppliable(user_obj,instance):
                     if earliest_more_applicable_rule==None or earliest_more_applicable_rule.interval > rule.interval:
                         earliest_more_applicable_rule=rule
-                
+
         return earliest_more_applicable_rule
 
 
@@ -231,24 +231,24 @@ class ChargeWithRules(Charge):
     def calcCreditUsage(self,user_obj,round_result):
         """
             return credit usage amount of user_obj.
-            round_result(boolean): Should we round the result with tariff/rule attributes. Rounded result is 
+            round_result(boolean): Should we round the result with tariff/rule attributes. Rounded result is
                                    useful for showing and saving while the real amount is needed for calculations
         """
         credit_used=0
         for _index in range(user_obj.instances):
             credit_used+=self.calcInstanceCreditUsage(user_obj,_index+1,round_result)
         return credit_used + user_obj.charge_info.credit_prev_usage
-        
+
 
     def commit(self,user_obj):
         pass
-        
+
     def __getRule(self,rule_id):
         """
             return rule object with id "rule_id"
         """
-        return self.rules[integer(rule_id)]
-        
+        return self.rules[rule_id]
+
     def setRules(self,rules):
         """
             set rules dic of this charge to rules

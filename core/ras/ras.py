@@ -1,4 +1,4 @@
-from core.event import periodic_events 
+from core.event import periodic_events
 from core.ras.msgs import RasMsg
 from core.ibs_exceptions import *
 from core.ippool import ippool_main
@@ -25,7 +25,7 @@ class Ras:
             port(dic): dic of ports in format    {port_name:{"phone":phone_no,"type":type,"comment":comment}
             ippools(list): list of IPpool ids that this ras uses
             attributes(dic): a dictionary of key=>values that show ras specific attributes
-                             attributes are diffrent for various rases. for each type, 
+                             attributes are diffrent for various rases. for each type,
                              we have a type_default_attributes that are default values for each type
 
             type_default_attributes(dic): default attributes for ras type
@@ -40,7 +40,7 @@ class Ras:
         self.ippools = ippools
         self.type_default_attributes = self.type_attrs
         self.attributes = self.__fixAttrTypes(attributes)
-        
+
         self.handle_reload = False #this flag tells if ras should be reloaded by recreating the ras object
                                    #or ras would handle this by it's own _reload method
 
@@ -50,7 +50,7 @@ class Ras:
         """
             cast integer attributes in attrs
         """
-        for attr_dic in (self.default_attributes,self.type_default_attributes): 
+        for attr_dic in (self.default_attributes,self.type_default_attributes):
             for attr_name in attr_dic:
                 if isInt(attr_dic[attr_name]) and attr_name in attrs:
                     attrs[attr_name]=int(attrs[attr_name])
@@ -64,16 +64,16 @@ class Ras:
 
     def getRasDesc(self):
         return self.ras_description
-        
+
     def getRasComment(self):
         return self.comment
-        
+
     def getPorts(self):
         return self.ports
-        
+
     def hasPort(self,port_name):
         return port_name in self.ports
-        
+
     def hasIPpool(self,ippool_id):
         return ippool_id in self.ippools
 
@@ -84,11 +84,11 @@ class Ras:
         return self.attributes
 
     def getRadiusSecret(self):
-        return self.radius_secret
+        return self.radius_secret.encode("utf-8")
 
     def getType(self):
         return self.ras_type
-    
+
     def hasAttribute(self,attr_name):
         """
             return True if this ras, has it's own attribute "attr_name" and else False
@@ -108,7 +108,7 @@ class Ras:
         sorted_dic=SortedDic(all_attrs)
         sorted_dic.sortByKey(False)
         return sorted_dic.getList()
-                
+
     def getAttribute(self,attr_name):
         if attr_name in self.attributes:
             return self.attributes[attr_name]
@@ -137,7 +137,7 @@ class Ras:
         """
         if not self.getAttribute("online_check"):
             return True
-        
+
         return self.isOnline(user_msg)
 
     def _handleRadAuthPacket(self,request,reply):
@@ -187,12 +187,12 @@ class Ras:
         reply=ras_msg.getReplyPacket()
         if len(self.ippools)==0 or ras_msg==None or "Framed-IP-Address" in reply:
             return
-        
+
         for ippool_id in self.ippools:
             ippool_obj = ippool_main.getLoader().getIPpoolByID(ippool_id)
-        
+
             ip = None
-            
+
             if ras_msg.hasAttr("re_onlined"):
 
                 if ras_msg.hasAttr("remote_ip") and ippool_obj.hasIP(ras_msg["remote_ip"]):
@@ -209,7 +209,7 @@ class Ras:
                     ip = ippool_obj.setIPInPacket(reply)
                 except IPpoolFullException:
                     pass
-        
+
             if ip != None:
                 update_msg=ras_msg.createNew(None,None,self)
                 update_msg.setAction("INTERNET_UPDATE")
@@ -228,7 +228,7 @@ class Ras:
     def _calcRates(self, old_dic , new_dic):
         """
             Calc rates of in/out and add them in new_dic.
-            old_dic and new_dic must be dictionary of dictionaries with 
+            old_dic and new_dic must be dictionary of dictionaries with
             first level key as unique id and second level keys in_bytes and out_bytes available.
             This method should be called before setting new_dic to old_dic in ras, also the time from
             last call of this method is kept internally
@@ -276,10 +276,10 @@ class Ras:
     def tryToReOnline(self, ras_msg):
         """
             try to re online user in ras_msg
-            
+
             this method calls populateReOnlineRasMsg, _postAuth and TryToOnlineResult methods
             that can be overriden by children
-            
+
             NOTE: Calls _postAuth after authentication is done
             WARNING: Currently works only with INTERNET_AUTHENTICATE
         """
@@ -287,14 +287,14 @@ class Ras:
             self.populateReOnlineRasMsg(ras_msg)
 
             auth_success = ras_msg.send()
-        
+
             try:
                 self._postAuth(ras_msg, auth_success)
             except IPpoolFullException:
                 auth_success = False
-        
+
             ras_msg.setAction("") #do not authenticate again
-            
+
             return self.tryToReOnlineResult(ras_msg, auth_success)
         except:
             logException(LOG_ERROR)
@@ -327,11 +327,11 @@ class Ras:
     def isOnline(self,user_msg):
         """
             must return a bool (True or False) that shows wether user is online or not
-            
+
             this function should be overrided by ras implementions
         """
         return False
-    
+
     def killUser(self,user_msg):
         """
             force disconnect a user, user_msg is message from user
@@ -341,7 +341,7 @@ class Ras:
     def getInOutBytes(self,user_msg):
         """
             user_msg(UserMsg instance): User Message to get inout bytes
-            return a tuple of (in_bytes,out_bytes,in_rate,out_rate), 
+            return a tuple of (in_bytes,out_bytes,in_rate,out_rate),
             in and out bytes are from user view, and not ras
         """
         return (0, 0, 0, 0)
@@ -353,7 +353,7 @@ class Ras:
             user_msg has an attribute action, that shows the action ("apply" or "remove") that should be taken
         """
         return True
-    
+
     def dispatch(self,user_msg):
         """
             This method is called when action is not one of known and standard actions.
@@ -361,7 +361,7 @@ class Ras:
             if ras can't interpret the action, it should call self._raiseUnknownActionException(user_msg)
         """
         self._raiseUnknownActionException(user_msg)
-        
+
     def _raiseUnknownActionException(self,user_msg):
         raise IBSException("Action not %s supported by ras %s"%(user_msg.getAction(),self.getRasIP()))
 
@@ -371,13 +371,13 @@ class Ras:
             called when ras is deactivated, and after ras deactivated in database.
         """
         pass
-    
+
     def unloaded(self):
         """
             called when ras object is unloaded, it should do the cleanups
         """
         pass
-    
+
     def _reload(self):
         """
             reload ras_obj only if self.handle_reload==True
@@ -402,11 +402,11 @@ class Ras:
 
         self.radius_secret=ras_info["radius_secret"]
         ras_main.getLoader().updateRadiusRemoteHost(self.ras_ip, self.radius_secret)
-        
+
         if ras_loader_changed:
             ras_main.getLoader().keepObj(self)
-    
-    
+
+
     def tryToReOnlineResult(self, ras_msg, auth_success):
         """
             call after Re-Online try has been done
@@ -415,7 +415,7 @@ class Ras:
                                    if it wasn't successful this method should do the clean up(kill user)
         """
         pass
-        
+
 class GeneralUpdateRas(Ras):
     """
         This class has an update method, that will be called for general_update_interval intervals,
@@ -424,8 +424,8 @@ class GeneralUpdateRas(Ras):
     def __init__(self,ras_ip,ras_id,ras_description,ras_type,radius_secret,comment,ports,ippools,attributes):
         if "general_update_interval" not in self.type_attrs:
             self.type_attrs["general_update_interval"] = 10
-        
-        Ras.__init__(self,ras_ip,ras_id,ras_description,ras_type,radius_secret,comment,ports,ippools,attributes)
+
+        super().__init__(ras_ip,ras_id,ras_description,ras_type,radius_secret,comment,ports,ippools,attributes)
         self._registerEvent()
 
     def _registerEvent(self):
@@ -435,10 +435,10 @@ class GeneralUpdateRas(Ras):
 
             def run(my_self):
                 self.generalUpdate()
-        
+
         self.__general_update_event=GeneralUpdateEvent()
         periodic_events.getManager().register(self.__general_update_event)
-    
+
     def generalUpdate(self):
         return self.updateInOutBytes()
 
@@ -471,7 +471,7 @@ class UpdateUsersRas(GeneralUpdateRas):
 
     def _registerEvent(self):
         GeneralUpdateRas._registerEvent(self)
-        
+
         class UpdateUserListEvent(periodic_events.PeriodicEvent):
             def __init__(my_self):
                 periodic_events.PeriodicEvent.__init__(my_self,"%s update userlist"%self.getRasIP(),int(self.getAttribute("update_users_interval")),[],0)
@@ -485,9 +485,8 @@ class UpdateUsersRas(GeneralUpdateRas):
 
     def updateUserList(self):
         pass
-    
+
     def _delEvent(self):
         GeneralUpdateRas._delEvent(self)
         if self.getAttribute("online_check"):
             periodic_events.getManager().unRegister(self.__update_userlist_event)
-            

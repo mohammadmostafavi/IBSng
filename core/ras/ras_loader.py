@@ -2,7 +2,7 @@ from core.db import db_main
 from core.ras import ras_main
 from core.ibs_exceptions import *
 from core.errors import errorText
-from radius_server.pyrad.server import RemoteHost
+from pyrad.server import RemoteHost
 
 class RasLoader:
     def __init__(self):
@@ -25,14 +25,14 @@ class RasLoader:
             return self.rases_id[ras_id]
         except KeyError:
             raise GeneralException(errorText("RAS","INVALID_RAS_ID")%ras_id)
-        
+
     def getRasByDesc(self, ras_description):
         try:
             return self.rases_description[ras_description]
         except KeyError:
             raise GeneralException(errorText("RAS","INVALID_RAS_DESCRIPTION")%ras_description)
-        
-    
+
+
     def checkRasIP(self,ras_ip):
         """
             check if ras with ip "ras_ip" is loaded
@@ -41,7 +41,7 @@ class RasLoader:
         if not self.rasIPExists(ras_ip):
             raise GeneralException(errorText("RAS","INVALID_RAS_IP")%ras_ip)
 
-    
+
     def checkRasID(self,ras_id):
         """
             check if ras with id "ras_id" is loaded
@@ -93,7 +93,8 @@ class RasLoader:
 
     def loadAllRases(self):
         ras_ids=self.__getAllActiveRasIDs()
-        list(map(self.loadRas,ras_ids))
+        for ras_id in ras_ids:
+            self.loadRas(ras_id)
 
     def loadRas(self,ras_id):
         """
@@ -125,7 +126,7 @@ class RasLoader:
         ras_obj=self.getRasByID(ras_id)
         ras_obj.unloaded()
         self.unKeepObj(ras_obj)
-    
+
     def getRadiusRemoteHosts(self):
         return self.radius_remote_hosts
 
@@ -135,14 +136,14 @@ class RasLoader:
         """
         ras_ids=db_main.getHandle().get("ras","active='t'",0,-1,"",["ras_id"])
         return [m["ras_id"] for m in ras_ids]
-            
+
     def __getRasIPpools(self,ras_id):
         """
             return a list of ras ippool ids in format [pool_id1,pool_id2,..]
         """
         ras_ippools_db=self.__getRasIPpoolsDB(ras_id)
         return [m["ippool_id"] for m in ras_ippools_db]
-        
+
     def __getRasIPpoolsDB(self,ras_id):
         """
             return a list of ras ippool names from table ras_ippools
@@ -151,7 +152,7 @@ class RasLoader:
 
     def __getRasPorts(self,ras_id):
         """
-            return a dic of ports of ras with id "ras_id" in format 
+            return a dic of ports of ras with id "ras_id" in format
             {port_name:{"phone":phone_no,"type":type,"comment":comment}
         """
         ports={}
@@ -184,7 +185,7 @@ class RasLoader:
 
     def __getRasAttrsDB(self,ras_id):
         """
-            return a dic of ras_attributes returned from "ras_attrs" table 
+            return a dic of ras_attributes returned from "ras_attrs" table
         """
         return db_main.getHandle().get("ras_attrs","ras_id=%s"%ras_id)
 
@@ -192,7 +193,7 @@ class RasLoader:
         """
             create a ras object, using ras_info and ras_attrs
         """
-        return ras_main.getFactory().getClassFor(ras_info["ras_type"])(ras_info["ras_ip"],      
+        return ras_main.getFactory().getClassFor(ras_info["ras_type"])(ras_info["ras_ip"],
                                                                        ras_info["ras_id"],
                                                                        ras_info["ras_description"],
                                                                        ras_info["ras_type"],
@@ -222,4 +223,3 @@ class RasLoader:
             update the radius remote hosts, setting "ras_ip" secret as "secret_key"
         """
         self.radius_remote_hosts[ras_ip] = RemoteHost(ras_ip,secret_key,ras_ip)
-        

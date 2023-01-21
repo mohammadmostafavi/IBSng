@@ -50,7 +50,6 @@ def startRadiusServer():
     srv.hosts = ras_main.getLoader().getRadiusRemoteHosts()
     thread_main.runThread(srv.Run,[],"radius")
 
-
 def shutdown():
     if not radius_server_started:
         return

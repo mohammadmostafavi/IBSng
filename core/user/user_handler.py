@@ -20,12 +20,12 @@ class UserHandler(handler.Handler):
         self.registerHandlerMethod("delUser")
         self.registerHandlerMethod("killUser")
         self.registerHandlerMethod("calcApproxDuration")
-                
+
     def addNewUsers(self,request):
         """
             Add "count" number of raw users. Created users has no attribute assigned to them.
             Later you should assign attribute by updateUserAttrs
-            
+
             return a list of created user_id s
         """
         request.needAuthType(request.ADMIN)
@@ -43,7 +43,7 @@ class UserHandler(handler.Handler):
             credit=float(request["credit"])
         except ValueError:
             raise GeneralException(errorText("USER_ACTIONS","CREDIT_NOT_FLOAT"))
-            
+
         return user_main.getActionManager().addNewUsers(_count,credit,request["owner_name"],requester.getUsername(),
                                                         request["group_name"],request.getRemoteAddr(),
                                                         request["credit_comment"])
@@ -59,23 +59,23 @@ class UserHandler(handler.Handler):
             if requirter is user, no argument will be parsed and auth_name is used
         """
         if request.hasAuthType(request.ADMIN):
-            if "user_id" in request:
+            if "user_id" in request.params:
                 loaded_users=user_main.getActionManager().getLoadedUsersByUserID(MultiStr(request["user_id"]))
-            elif "normal_username" in request:
+            elif "normal_username" in request.params:
                 loaded_users=user_main.getActionManager().getLoadedUsersByNormalUsername(MultiStr(request["normal_username"]))
-            elif "voip_username" in request:
+            elif "voip_username" in request.params:
                 loaded_users=user_main.getActionManager().getLoadedUsersByVoIPUsername(MultiStr(request["voip_username"]))
             else:
                 raise request.raiseIncompleteRequest("user_id")
 
             admin_obj=request.getAuthNameObj()
             list(map(admin_obj.canAccessUser,loaded_users))
-            
+
         elif request.hasAuthType(request.NORMAL_USER) or request.hasAuthType(request.VOIP_USER):
             loaded_users=[request.getAuthNameObj()]
         else:
             raise request.raiseIncompleteRequest("auth_type")
-        
+
         user_infos=user_main.getActionManager().getUserInfosFromLoadedUsers(loaded_users,request.getDateType())
 
         if request.hasAuthType(request.NORMAL_USER) or request.hasAuthType(request.VOIP_USER):
@@ -83,7 +83,7 @@ class UserHandler(handler.Handler):
             return self.__addGroupAttrsForUser(user_info, request.getDateType())
 
         return user_infos
-    
+
     def __filterAttrsForUser(self,user_info):
         """
             filter unnecessary informations of user, like password and raw_attrs so the informations
@@ -100,13 +100,13 @@ class UserHandler(handler.Handler):
 
     def __addGroupAttrsForUser(self,user_info, date_type):
         """
-            add group attributes to attr dic, if user doesn't have the attr. Users don't have 
+            add group attributes to attr dic, if user doesn't have the attr. Users don't have
             access to groups, and they doesn't know about user/group logic.
         """
         group_obj=group_main.getLoader().getGroupByID(user_info["basic_info"]["group_id"])
         group_attrs = group_obj.getParsedAttrs(date_type)
         for attr_name in group_attrs:
-            
+
             #if it's not set in user
             if attr_name not in user_info["attrs"]:
                 user_info["attrs"][attr_name] = group_attrs[attr_name]
@@ -116,10 +116,10 @@ class UserHandler(handler.Handler):
     def updateUserAttrs(self,request):
         """
             update user attributes
-            
+
             user_id(string): user ids that should be updated, can be multi strings
             attrs(dic): dictionary of attr_name:attr_value. We say we want attr_name value to be attr_value
-            to_del_attrs(dic): dic of attributes that should be deleted 
+            to_del_attrs(dic): dic of attributes that should be deleted
         """
         request.needAuthType(request.ADMIN)
         request.checkArgs("user_id","attrs","to_del_attrs")
@@ -169,12 +169,12 @@ class UserHandler(handler.Handler):
                 conds["owner_name"]=[admin_obj.getUsername()]
         else:
             raise PermissionException(errorText("GENERAL","ACCESS_DENIED"))
-                
+
         return user_main.getActionManager().searchUsers(conds,request["from"],request["to"],request["order_by"],request["desc"],admin_obj)
 
     def __searchUserFixConds(self,conds):
         """
-            convert integer key dictionaries to lists. It takes care of other dics so it won't convert 
+            convert integer key dictionaries to lists. It takes care of other dics so it won't convert
             other dics
         """
         return report_lib.fixConditionsDic(conds)
@@ -233,11 +233,10 @@ class UserHandler(handler.Handler):
 
             admin_obj=request.getAuthNameObj()
             admin_obj.canAccessUser(loaded_user)
-            
+
         elif request.hasAuthType(request.NORMAL_USER) or request.hasAuthType(request.VOIP_USER):
             loaded_user=request.getAuthNameObj()
         else:
             raise request.raiseIncompleteRequest("auth_type")
-        
+
         return user_main.getActionManager().calcApproxDuration(loaded_user)
-    

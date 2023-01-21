@@ -8,7 +8,7 @@ from core.ippool import ippool_main
 
 class RasHandler(handler.Handler):
     def __init__(self):
-        handler.Handler.__init__(self,"ras")
+        super().__init__("ras")
         self.registerHandlerMethod("addNewRas")
         self.registerHandlerMethod("getRasInfo")
         self.registerHandlerMethod("getActiveRasIPs")
@@ -64,7 +64,7 @@ class RasHandler(handler.Handler):
     def getRasDescriptions(self,request):
         """
             return list of tuples in format [(ras_description,ras_ip)]
-            
+
         """
         request.needAuthType(request.ADMIN)
         creator_obj=request.getAuthNameObj()
@@ -90,8 +90,8 @@ class RasHandler(handler.Handler):
         sorted = SortedList(type_list)
         sorted.sort(False)
         return sorted.getList()
-        
-    def getRasAttributes(self,request): 
+
+    def getRasAttributes(self,request):
         request.needAuthType(request.ADMIN)
         request.checkArgs("ras_ip")
         creator_obj=request.getAuthNameObj()
@@ -106,7 +106,7 @@ class RasHandler(handler.Handler):
         sorted=SortedList(list(ras_main.getLoader().getRasByIP(request["ras_ip"]).getPorts().values()))
         sorted.sortByPostText("[\"port_name\"]",0)
         return sorted.getList()
-    
+
     def updateRasInfo(self,request):
         request.needAuthType(request.ADMIN)
         request.checkArgs("ras_id","ras_ip","ras_type","radius_secret","ras_description","comment")
@@ -142,7 +142,7 @@ class RasHandler(handler.Handler):
                                                    MultiStr(request["phone"]),
                                                    MultiStr(request["comment"]))
 
-    def getPortTypes(self,request):     
+    def getPortTypes(self,request):
         request.needAuthType(request.ADMIN)
         request.getAuthNameObj().canDo("CHANGE RAS")
         return ras.PORT_TYPES
@@ -182,7 +182,7 @@ class RasHandler(handler.Handler):
         request.checkArgs("ras_ip","port_name")
         return ras_main.getActionManager().getRasPortInfo(request["ras_ip"],MultiStr(request["port_name"]))
 
-    def getRasIPpools(self,request):    
+    def getRasIPpools(self,request):
         """
             return a sorted list of ip pool names
         """
@@ -193,7 +193,7 @@ class RasHandler(handler.Handler):
         ippool_names=[ippool_main.getLoader().getIPpoolByID(ippool_id).getIPpoolName() for ippool_id in ippool_ids]
         return ippool_names
 
-        
+
     def addIPpoolToRas(self,request):
         """
             Add an IP pool to ras

@@ -18,7 +18,7 @@ class AttributeManager:
             change_attr_list(list of strs): list of attributes for change action, one would be enough
             delete_attr_list(list of strs): list of attributes for delete action, one would be enough
             parse_attr_list(list of strs): list of attributes that this attr handle can parse, one attribute per parser
-            post_parse_methods(list of callable objects): call these methods after parsing is done. 
+            post_parse_methods(list of callable objects): call these methods after parsing is done.
                                                proto type of method is "method(_id,_type,raw_attrs,parsed_attrs,date_type)" where parsed_attrs is a dic
                                                of parsed attrs and raw_attrs is raw attributes. method
                                                may change parsed_attrs but not raw_attrs
@@ -27,7 +27,7 @@ class AttributeManager:
         """
         if handler_obj:
             self.all_handlers.append(handler_obj)
-            
+
         for attr in change_attr_list:
             if attr in self.change_attr_handlers:
                 raise IBSException(errorText("USER","DUPLICATE_ATTR_REGISTRATION")%attr)
@@ -53,7 +53,7 @@ class AttributeManager:
                 return self.delete_attr_handlers[attr_name]
         except KeyError:
             pass
-        
+
     def getAttrUpdaters(self,attrs,action):
         """
             attrs(dic or list): dic of all attributes in format name:value
@@ -77,7 +77,7 @@ class AttributeManager:
     def getAttrHolders(self,attrs):
         """
             attrs(dic or list): dic of all attributes in format name:value
-            return a list of attr holders for attrs 
+            return a list of attr holders for attrs
         """
         attr_holders=[]
         for attr_name in attrs:
@@ -113,7 +113,9 @@ class AttributeManager:
         """
         search_helper=SearchUserHelper(conditions,admin_obj,"admin")
         attr_searchers=self.__getAllAttrSearchers(search_helper)
-        list(map(lambda x:apply(getattr(x,"run")),attr_searchers))
+        # list(map(lambda x:apply(getattr(x,"run")),attr_searchers))
+        for attr_searcher in attr_searchers:
+            attr_searcher.run()
         return search_helper
 
     def __getAllAttrSearchers(self, search_helper):
@@ -122,7 +124,6 @@ class AttributeManager:
         for handler in self.all_handlers:
             for attr_searcher in handler.getAttrSearchers():
                 attr_searchers.append(attr_searcher(search_helper))
-                
+
         return attr_searchers
-    
-    
+

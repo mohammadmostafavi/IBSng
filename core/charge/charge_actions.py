@@ -412,7 +412,7 @@ class ChargeActions:
                                                         "end_time":dbText(rule_obj.end_time),
                                                         "cpm":float(rule_obj.cpm),
                                                         "cpk":float(rule_obj.cpk),
-                                                        "assumed_kps":integer(rule_obj.assumed_kps),
+                                                        "assumed_kps":rule_obj.assumed_kps,
                                                         "bandwidth_limit_kbytes":integer(rule_obj.bandwidth_limit),
                                                         "ras_id":ras_id,
                                                         "bw_transmit_leaf_id":dbNull(rule_obj.bw_tx_leaf_id),

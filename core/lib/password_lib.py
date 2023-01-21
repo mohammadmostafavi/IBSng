@@ -15,15 +15,15 @@ def getPasswords(_count,_type,_len):
         chars="123456789"
     else:
         chars="abcdefghijkmnpqrstuvwxyz23456789" #don't include 1&l , 0&o they are hard to distinguish
-    
+
     return [Password(generateRandomPassword(chars,_len)) for x in range(_count)]
-    
+
 def generateRandomPassword(chars,_len):
     """
         generate a random password from characters in "chars" and length of "_len"
     """
     return "".join([chars[random.randint(0,len(chars)-1)] for x in range(_len)])
-    
+
 
 class Password:
     pass_chars_match=re.compile("[^A-Za-z0-9_\-]")
@@ -31,7 +31,7 @@ class Password:
         self.password=password
 
     def __eq__(self,password_obj):
-        if type(password_obj)==bytes:
+        if type(password_obj)==str:
             password_obj=Password(password_obj)
 
         if self.isMd5Hash():
@@ -54,9 +54,9 @@ class Password:
             return 0
         return 1
 
-    def getMd5Crypt(self,salt=None): 
+    def getMd5Crypt(self,salt=None):
         """
-            md5crypt "self.password" with "salt", 
+            md5crypt "self.password" with "salt",
             If "salt" is None,a new salt will be randomly generated and used
             If "text" is already md5crypted, return it, else return crypted pass
         """
@@ -64,7 +64,7 @@ class Password:
             return self.password
         else:
             return self.__md5Crypt(salt)
-        
+
     def getPassword(self):
         return self.password
 

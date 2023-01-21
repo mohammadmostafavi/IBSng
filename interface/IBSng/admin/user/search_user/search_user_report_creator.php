@@ -2,9 +2,9 @@
 
 
 /**
- * 
+ *
  * search_user_report_creator.php
- * 
+ *
  * */
 
 require_once ("search_user_report_generator_controller.php");
@@ -61,7 +61,7 @@ class SearchUserReportCreator extends ReportCreator
 	/**
 	 * get value of $two_dimension_array[$row][$column]
 	 * if value doesn't exist return ""
-	 * 
+	 *
 	 * @param array[][] $two_dimension_array
 	 * @param mixed $row row of array
 	 * @param mixed $column column of array
@@ -85,7 +85,7 @@ class SearchUserReportCreator extends ReportCreator
 	{
 		$attr_value = "";
 
-		if (ereg("^show__attrs_.*", $attribute_name))
+		if (preg_match("/^show__attrs_.*/", $attribute_name))
 		{
 			$attribute_name = str_replace("show__attrs_", "", $attribute_name);
 
@@ -99,14 +99,14 @@ class SearchUserReportCreator extends ReportCreator
 			{
 				$attr_value = $this->getValueFromTwoDimArray($user_attrs, "attrs", $attribute_name);
 
-				// value of attribute not found in user list 
+				// value of attribute not found in user list
 				// search in attributes of group
 				if ($attr_value == "")
 					$attr_value = $this->getGroupAttrValue($user_attrs, $attribute_name);
 			}
 		}
 		else
-			if (ereg("^show__basic_.*", $attribute_name))
+			if (preg_match("/^show__basic_.*/", $attribute_name))
 			{
 				$attribute_name = array (str_replace("show__basic_", "", $attribute_name));
 				$attr_value = $this->getValueFromTwoDimArray($user_attrs, "basic_info", $attribute_name[0]);
@@ -115,7 +115,7 @@ class SearchUserReportCreator extends ReportCreator
 	}
 	/**
 	 * get Group attribute value
-	 * 
+	 *
 	 * @param mixed $user_attrs attributes of user
 	 * @param string $attr_name name of attribute
 	 * @return $mixed value of attrValue ($attr_name)

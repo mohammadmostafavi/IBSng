@@ -11,25 +11,25 @@ class InternetChargeRule(ChargeRule):
             rule_id (integer) : unique id of this rule
 
             cpm (integer):        Charge Per Minute
-            
+
             cpk (integer):        Charge Per KiloByte
 
-            day_of_weeks (DayOfWeekIntContainer instance): Days Of Week of this rule 
+            day_of_weeks (DayOfWeekIntContainer instance): Days Of Week of this rule
 
             start (integer):      Rule start time, seconds from 00:00:00
 
             end (integer):        Rule end Time, seconds from 00:00:00
 
             bandwidth_limit (integer): bandwidth limit KiloBytes, now useful for lan (vpn) users only
-            
-            bw_tx_leaf_id (integer): id of leaf, used for bandwidth manager to shape user transmit, 
+
+            bw_tx_leaf_id (integer): id of leaf, used for bandwidth manager to shape user transmit,
                                      can be None that means no leaf_id specified
             bw_rx_leaf_id (integer): same as bw_tx_leaf_id but used for user recieve shaping
-        
+
             assumed_kps (integer): assumed (maximum) transfer rate for this rule in KiloBytes per seconds
                                    this is used to determine maximum user transfer rate and the soonest time
-                                   that user with this rule can consume a limited amount of allowed transfer 
-            
+                                   that user with this rule can consume a limited amount of allowed transfer
+
             ras_id (integer):   ras id, this rule will apply to users that login on this ras_id , if set to self.ALL, if there wasn't
                         any exact match for user, this rule will be used
 
@@ -37,7 +37,7 @@ class InternetChargeRule(ChargeRule):
                         and port not matched, the total result is not match and we look for another rule or wildcard rule(self.ALL)
                         if Ports is an empty array, it'll be used for all not matched users
         """
-        ChargeRule.__init__(self,rule_id,charge_obj,day_of_weeks,start,end,ras_id,ports)
+        super().__init__(rule_id,charge_obj,day_of_weeks,start,end,ras_id,ports)
         self.bandwidth_limit=bandwidth_limit
         self.assumed_kps=assumed_kps
         self.cpm=cpm
@@ -65,13 +65,13 @@ class InternetChargeRule(ChargeRule):
             dic["bw_tx_leaf_name"]=bw_main.getLoader().getLeafByID(self.bw_tx_leaf_id).getLeafName()
             dic["bw_rx_leaf_name"]=bw_main.getLoader().getLeafByID(self.bw_rx_leaf_id).getLeafName()
         return dic
-    
+
     def start(self,user_obj,instance):
         """
             called when this rule starts for user_obj
-            
+
             user_obj (User.User instance): object of user that this rule change for
-            instance (integer): instance number of user 
+            instance (integer): instance number of user
         """
         ChargeRule.start(self,user_obj,instance)
         user_obj.charge_info.rule_start_inout[instance-1]=user_obj.getTypeObj().getInOutBytes(instance)
@@ -82,10 +82,10 @@ class InternetChargeRule(ChargeRule):
 
     def end(self,user_obj,instance):
         """
-            called when this rule ends for user_obj     
-            
-            user_obj (User.User instance): object of user that this rule change for         
-            instance (integer): instance number of user             
+            called when this rule ends for user_obj
+
+            user_obj (User.User instance): object of user that this rule change for
+            instance (integer): instance number of user
         """
         ChargeRule.end(self,user_obj,instance)
         if self.bandwidth_limit>0:
@@ -106,15 +106,15 @@ class InternetChargeRule(ChargeRule):
         """
         cur_rule_inout=self.calcRuleInOutUsage(user_obj,instance)
         return cur_rule_inout[0]+cur_rule_inout[1]
-    
+
     def __applyBwLimit(self,user_obj,instance,action):
         """
             apply bandwidth limit on user, this is seperate from simple bandwidth limit
 
             user_obj (User.User instance): object of user that we want to apply limit on
-            instance (integer): instance number of user 
+            instance (integer): instance number of user
             action (integer): can be "apply" and "remove"
-            
+
         """
         if self.bw_tx_leaf_id==None and self.bw_rx_leaf_id==None:
             return
