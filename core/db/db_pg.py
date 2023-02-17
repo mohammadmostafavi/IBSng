@@ -78,7 +78,9 @@ class db_pg (ibs_db):
 
     def runIBSQuery(self,ibs_query):
         self.__transactionQuery("BEGIN;")
-        list(map(self.__transactionQuery,ibs_query))
+        # list(map(self.__transactionQuery,ibs_query))
+        for query in ibs_query:
+            self.__transactionQuery(query)
         self.__transactionQuery("COMMIT;")
 
     def check(self):

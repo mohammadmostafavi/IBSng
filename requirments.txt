@@ -3,3 +3,4 @@ PyOpenGL
 six
 twisted
 netaddr
+pyrad

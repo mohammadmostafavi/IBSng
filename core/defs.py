@@ -2,6 +2,7 @@
 from core.defs_lib.defs_loader import DefsLoader
 import os
 
+
 DEBUG_THREADS=4 #dangerous
 DEBUG_ALL=3
 DEBUG_WARNINGS=2
@@ -43,11 +44,13 @@ THREAD_POOL_MAX_RELEASE_TIME=600
 
 MAXLONG=0x7fffffff
 
+
 def init():
     global defs_loader
     defs_loader=DefsLoader()
     defs_loader.setGlobalsDic(globals())
     defs_loader.loadAll()
+
 
 def getDefsLoader():
     return defs_loader

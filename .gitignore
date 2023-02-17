@@ -5,3 +5,12 @@
 .venv
 logs/
 templates_c/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info
+*.egg
+*.egg-info/
+*.egg-info/*

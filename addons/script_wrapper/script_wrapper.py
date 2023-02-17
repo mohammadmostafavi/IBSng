@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#/usr/bin/python
 import os
 import sys
 import script_timeout
@@ -6,10 +6,10 @@ from optparse import OptionParser
 
 timeout=20
 
-    
+
 def parseOptions():
     global timeout
-    
+
     usage = """usage: %prog [options] <SCRIPT PATH> arg1 arg2 ... 
     
                script_wrapper is a wrapper to set a timeout for running an script. 
@@ -17,19 +17,19 @@ def parseOptions():
                Exit code will be 255 if timeout occures or 254 if error occures.
                Otherwise exit code will be the same as script exit code
     """
-               
-    
+
+
     parser = OptionParser(usage=usage)
     parser.add_option("-t", "--timeout", type="int", dest="timeout", default=20, help="Script Run Timeout in seconds")
     options, args = parser.parse_args()
-    
+
     if len(args) < 1:
         parser.error("Script Path is missing")
-    
+
     timeout = options.timeout
-    
+
     return args[0], args[1:]
-    
+
 def main():
     script , args = parseOptions()
 
@@ -40,12 +40,12 @@ def main():
     else:
         script_timeout.shouldExitIn(timeout)
         child_status = os.wait()[1]
-    
+
     if os.WIFEXITED(child_status):
         exit_code = os.WEXITSTATUS(child_status)
     else:
         exit_code = -2
-    
+
     sys.exit(exit_code)
 
 def quote(_str):
