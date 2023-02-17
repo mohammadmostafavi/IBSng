@@ -38,27 +38,27 @@ def toLog(_str,log_file,debug_level=0,add_stack=0):
         return
 
     if log_file & LOG_ERROR:
-        logging.error(msg=_str,stack_info=True)
+        # logging.error(msg=_str,stack_info=True)
         error_log_handle.write(_str,add_stack)
 
     if log_file & LOG_RADIUS:
-        logging.info(msg=_str,stack_info=True)
+        # logging.info(msg=_str,stack_info=True)
         radius_log_handle.write(_str,add_stack)
 
     if log_file & LOG_SERVER:
-        logging.info(msg=_str,stack_info=True)
+        # logging.info(msg=_str,stack_info=True)
         server_log_handle.write(_str,add_stack)
 
     if log_file & LOG_QUERY:
-        logging.info(msg=_str,stack_info=True)
+        # logging.info(msg=_str,stack_info=True)
         query_log_handle.write(_str,add_stack)
 
     if log_file & LOG_DEBUG:
-        logging.debug(msg=_str,stack_info=True)
+        # logging.debug(msg=_str,stack_info=True)
         debug_log_handle.write(_str,add_stack)
 
     if log_file & LOG_CONSOLE:
-        logging.info(msg=_str,stack_info=True)
+        # logging.info(msg=_str,stack_info=True)
         console_log_handle.write(_str,add_stack)
 
 def getExceptionText():
