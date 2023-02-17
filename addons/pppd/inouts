@@ -1,4 +1,4 @@
-#!/usr/bin/python -O
+#/usr/bin/python -O
 """
 sys.argv[0]: ras ip
 print pppif_num in_bytes out_bytes
